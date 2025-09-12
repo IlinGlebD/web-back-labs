@@ -34,12 +34,16 @@ def author():
 @app.route('/image')
 def image():
     path = url_for('static', filename='дуб.jpg')
+    css = url_for('static', filename='lab1.css')
     return '''<!doctype html>
         <html>
-           <body>
-               <h1>Дуб</h1>
-               <img src="''' + path + '''">
-           </body>
+            <head>
+                <link rel="stylesheet" href="''' + css + '''">
+            </head>
+            <body>
+                <h1>Дуб</h1>
+                <img src="''' + path + '''">
+            </body>
         </html>'''
 
 count = 0
@@ -58,7 +62,7 @@ def counter():
                <hr>
                Дата и время: ''' + str(time) + '''<br>
                Запрошенный адрес: ''' + url + '''<br>
-               Ваш IP-адрес: ''' + client_ip + '''<br> 
+               Ваш IP-адрес: ''' + client_ip + '''<br>
            </body>
         </html>'''
 

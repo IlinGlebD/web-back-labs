@@ -1,0 +1,17 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #fafafa;
+    margin: 0;
+    padding: 20px;
+}
+  
+h1 {
+    color: #333;
+}
+  
+img {
+    width: 300px;       /* ширина картинки */
+    height: auto;       /* высота подстраивается */
+    border-radius: 8px; /* лёгкое скругление */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}

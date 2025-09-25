@@ -384,7 +384,21 @@ def flowers(flower_id):
     if flower_id >= len(flower_list):
         abort(404)
     else:
-        return "цветок: " + flower_list[flower_id]
+        flower_name = flower_list[flower_id]
+        return f"""<!doctype html>
+        <html>
+            <head>
+                <title>Цветок {flower_id}</title>
+                <meta charset="utf-8">
+            </head>
+            <body>
+                <h1>Цветок: {flower_name}</h1>
+                <p>
+                    <a href="/lab2/all_flowers/">Посмотреть все цветы</a>
+                </p>
+            </body>
+        </html>
+        """
 
 @app.route('/lab2/add_flower/<name>')
 def add_flower(name):
@@ -399,6 +413,23 @@ def add_flower(name):
         </body>
     </html>'''
 
+@app.route('/lab2/add_flower/')
+def no_flower():
+    return '''<h1>400 Bad Request</h1><p>Вы не задали имя цветка.</p>''', 400
+
+@app.route('/lab2/all_flowers/')
+def all_flowers():
+    return f'''<h1>Информация о цветах</h1>
+        <p>Все цветы: {flower_list}</p>
+        <p>Количество: {len(flower_list)}</p>
+        <p><a href="/lab2/clear_flowers/">Очистить список</a></p>'''
+
+@app.route('/lab2/clear_flowers/')
+def clear_flowers():
+    flower_list.clear()
+    return '''<h1>Список очищен</h1>
+    <p><a href="/lab2/all_flowers/">Список цветов</a></p>'''
+
 @app.route('/lab2/example')
 def example():
     name = 'Ильин Глеб'
@@ -406,15 +437,15 @@ def example():
     group = 'ФБИ-32'
     course = '3 курс'
     fruits = [
-        {'name':'яблоки', 'price':100},
-        {'name':'груши', 'price':120},
-        {'name':'апельсины', 'price':80},
-        {'name':'мандарины', 'price':95},
-        {'name':'манго', 'price':321},
+        {'name': 'яблоки', 'price': 100},
+        {'name': 'груши', 'price': 120},
+        {'name': 'апельсины', 'price': 80},
+        {'name': 'мандарины', 'price': 95},
+        {'name': 'манго', 'price': 321},
         ]
     return render_template('example.html', name=name,
-                            lab_number=lab_number, group=group,
-                            course=course, fruits=fruits)
+                           lab_number=lab_number, group=group,
+                           course=course, fruits=fruits)
 
 @app.route('/lab2/')
 def lab2():
@@ -423,4 +454,4 @@ def lab2():
 @app.route('/lab2/filters')
 def filters():
     phrase = '0 <b>сколько</b> <u>нам</u> <i>открытий</i> чудных...'
-    return render_template('filter.html', phrase = phrase)
+    return render_template('filter.html', phrase=phrase)

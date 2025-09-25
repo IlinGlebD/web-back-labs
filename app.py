@@ -489,3 +489,37 @@ def books():
         {"author": "Дж. Р. Р. Толкин", "title": "Хоббит", "genre": "Фэнтези", "pages": 304},
     ]
     return render_template('books.html', books=books_data)
+
+@app.route('/lab2/gallery/')
+def gallery():
+    cats = [
+        {"name": "Барсик", "slug": "cat1", "desc": "Любит спать на клавиатуре."},
+        {"name": "Мурка", "slug": "cat2", "desc": "Охотница за солнечными зайчиками."},
+        {"name": "Симба", "slug": "cat3", "desc": "Король подоконника."},
+        {"name": "Буся", "slug": "cat4", "desc": "Обожает бумажные пакеты."},
+        {"name": "Тима", "slug": "cat5", "desc": "Занимается паркуром по шторам."},
+        {"name": "Луна", "slug": "cat6", "desc": "Ночная сторожка холодильника."},
+        {"name": "Пушок", "slug": "cat7", "desc": "Самый мягкий в мире."},
+        {"name": "Кнопа", "slug": "cat8", "desc": "Мини-кот с максимальным характером."},
+        {"name": "Феликс", "slug": "cat9", "desc": "Ценитель картонных коробок."},
+        {"name": "Нюша", "slug": "cat10", "desc": "Громко мурчит по утрам."},
+        {"name": "Граф", "slug": "cat11", "desc": "Эстет и лорд лотка."},
+        {"name": "Снежок", "slug": "cat12", "desc": "Бел как облачко."},
+        {"name": "Зефир", "slug": "cat13", "desc": "Сладкий, но шкодный."},
+        {"name": "Чёрныш", "slug": "cat14", "desc": "Мастер стелса."},
+        {"name": "Лео", "slug": "cat15", "desc": "Маленький лев, большой характер."},
+        {"name": "Персик", "slug": "cat16", "desc": "Персиковый пушистик."},
+        {"name": "Ириска", "slug": "cat17", "desc": "Липнет к людям."},
+        {"name": "Марс", "slug": "cat18", "desc": "Космокот: любит коробки-ракеты."},
+        {"name": "Туман", "slug": "cat19", "desc": "Едва заметен в пледе."},
+        {"name": "Соня", "slug": "cat20", "desc": "Спит 25 часов в сутки."},
+        {"name": "Рыжик", "slug": "cat21", "desc": "Солнечный характер."},
+        {"name": "Боня", "slug": "cat22", "desc": "Хрустит кормом как чипсами."},
+        {"name": "Мята", "slug": "cat23", "desc": "Любит кошачью мяту (очевидно!)."},
+        {"name": "Тигра", "slug": "cat24", "desc": "Полосатый инспектор шкафа."},
+    ]
+    # для каждого кота ожидаем файл static/images/cats/<slug>.jpg
+    for item in cats:
+        item["img_url"] = url_for('static',
+                                  filename=f'images/cats/{item["slug"]}.jpg')
+    return render_template('gallery.html', items=cats, title="Галерея котиков")

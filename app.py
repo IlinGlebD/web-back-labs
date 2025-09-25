@@ -412,10 +412,15 @@ def example():
         {'name':'мандарины', 'price':95},
         {'name':'манго', 'price':321},
         ]
-    return render_template('example.html', name=name, 
-                            lab_number=lab_number, group=group, 
+    return render_template('example.html', name=name,
+                            lab_number=lab_number, group=group,
                             course=course, fruits=fruits)
 
 @app.route('/lab2/')
 def lab2():
     return render_template('lab2.html')
+
+@app.route('/lab2/filters')
+def filters():
+    phrase = '0 <b>сколько</b> <u>нам</u> <i>открытий</i> чудных...'
+    return render_template('filter.html', phrase = phrase)

@@ -442,7 +442,7 @@ def filters():
 def calc(num1, num2):
     return f'''<h1>Расчёт с параметрами:</h1>
     <p>{num1} + {num2} = {num1 + num2}<br>
-    {num1} - {num2} = {num1 + num2}<br>
+    {num1} - {num2} = {num1 - num2}<br>
     {num1} x {num2} = {num1 * num2}<br>
     {num1}/{num2} = {num1/num2}<br>
     {num1}<sup>{num2}</sup> = {num1**num2}</p>'''

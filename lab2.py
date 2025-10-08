@@ -91,12 +91,12 @@ def calc(num1, num2):
 
 @lab2.route('/lab2/calc/')
 def calc1():
-    return redirect(url_for('calc', num1=1, num2=1))
+    return redirect(url_for('lab2.calc', num1=1, num2=1))
 
 
 @lab2.route('/lab2/calc/<int:num1>')
 def calc_with_one(num1):
-    return redirect(url_for('calc', num1=num1, num2=1))
+    return redirect(url_for('lab2.calc', num1=num1, num2=1))
 
 
 @lab2.route('/lab2/books/')

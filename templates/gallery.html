@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { 
-            --gap: 16px; 
+            --gap: 16px; /* Объявляем CSS-переменную: расстояние между карточками (gap) */
         }
         body { 
             font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
@@ -20,27 +20,29 @@
             margin-bottom: 16px; 
         }
         .grid {
-            display: grid;
+            display: grid; /* Используем CSS Grid для построения сетки карточек */
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: var(--gap);
+            /* Автоматически создаём столько столбцов, сколько помещается, 
+            каждая карточка минимум 220px, максимум — 1 часть доступной ширины */
+            gap: var(--gap); /* Расстояние между карточками — из переменной */
         }
         .card {
             border: 1px solid #e6e6e6;
             border-radius: 14px;
-            overflow: hidden;
+            overflow: hidden; /* Обрезаем всё, что выходит за границы (например, изображение) */
             background: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,.04);
             transition: transform .15s ease, box-shadow .15s ease;
         }
         .card:hover { 
-            transform: translateY(-2px); 
+            transform: translateY(-2px); /* Поднимаем карточку вверх при наведении */
             box-shadow: 0 6px 16px rgba(0,0,0,.08); 
         }
         .card img { 
-            display:block; 
+            display:block; /* Убираем лишние пробелы под изображением */
             width:100%; 
             height:180px; 
-            object-fit: cover; 
+            object-fit: cover; /* Обрезаем изображение, чтобы заполнить контейнер без искажений */
         }
         .card .body { 
             padding: 12px 14px 14px; 

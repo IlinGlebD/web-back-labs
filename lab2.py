@@ -1,4 +1,4 @@
-from flask import Blueprint, url_for, request, redirect, Response, abort, render_template
+from flask import Blueprint, url_for, request, redirect, abort, render_template
 lab2 = Blueprint('lab2', __name__)
 
 
@@ -21,7 +21,7 @@ flower_list = [
 
 @lab2.route('/lab2/flowers/')
 def all_flowers():
-    return render_template('flower.html', flower=flower_list)
+    return render_template('lab2/flower.html', flower=flower_list)
 
 
 @lab2.route('/lab2/add_flower/', methods=['POST'])
@@ -63,20 +63,20 @@ def example():
         {'name': 'мандарины', 'price': 95},
         {'name': 'манго', 'price': 321},
         ]
-    return render_template('example.html', name=name,
+    return render_template('lab2/example.html', name=name,
                            lab_number=lab_number, group=group,
                            course=course, fruits=fruits)
 
 
 @lab2.route('/lab2/')
 def lab():
-    return render_template('lab2.html')
+    return render_template('lab2/lab2.html')
 
 
 @lab2.route('/lab2/filters')
 def filters():
     phrase = '0 <b>сколько</b> <u>нам</u> <i>открытий</i> чудных...'
-    return render_template('filter.html', phrase=phrase)
+    return render_template('lab2/filter.html', phrase=phrase)
 
 
 @lab2.route('/lab2/calc/<int:num1>/<int:num2>')
@@ -114,7 +114,7 @@ def books():
         {"author": "Габриэль Гарсиа Маркес", "title": "Сто лет одиночества", "genre": "Магический реализм", "pages": 464},
         {"author": "Дж. Р. Р. Толкин", "title": "Хоббит", "genre": "Фэнтези", "pages": 304},
     ]
-    return render_template('books.html', books=books_data)
+    return render_template('lab2/books.html', books=books_data)
 
 
 @lab2.route('/lab2/gallery/')
@@ -149,4 +149,4 @@ def gallery():
     for item in cats:
         item["img_url"] = url_for('static',
                                   filename=f'images/cats/{item["slug"]}.jpg')
-    return render_template('gallery.html', items=cats, title="Галерея котиков")
+    return render_template('lab2/gallery.html', items=cats, title="Галерея котиков")

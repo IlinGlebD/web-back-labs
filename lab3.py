@@ -180,7 +180,7 @@ def ticket_submit():
     if origin and destination and origin.lower() == destination.lower():
         errors.append('Пункты выезда и назначения не должны совпадать.')
 
-    # Возраст 1..120
+    # Возраст
     try:
         age = int(age_raw)
         if age < 1 or age > 120:
@@ -189,7 +189,7 @@ def ticket_submit():
         errors.append('Возраст должен быть целым числом.')
         age = None  # чтобы не падать ниже
 
-    # Дата — обязательна (можно не запрещать прошлые даты по условию)
+    # Дата
     trip_date = None
     if not trip_date_s:
         errors.append('Укажите дату поездки.')
@@ -203,7 +203,7 @@ def ticket_submit():
         return render_template('lab3/ticket_order.html', errors=errors,
                                form_data=form_data), 400
 
-    # --- Расчёт цены ---
+    # Расчёт цены
     price = 1000 if age >= 18 else 700  # базовая
     if berth in ('нижняя', 'нижняя боковая'):
         price += 100
@@ -243,3 +243,126 @@ def ticket_submit():
         price=price,
         breakdown=breakdown
     )
+
+
+PRODUCTS = [
+    {"name": "Galaxy S21", "price": 39990, "brand": "Samsung", "color": "черный"},
+    {"name": "iPhone 13", "price": 69990, "brand": "Apple",   "color": "белый"},
+    {"name": "Pixel 7", "price": 45990, "brand": "Google",  "color": "черный"},
+    {"name": "Redmi Note 12", "price": 19990, "brand": "Xiaomi",  "color": "синий"},
+    {"name": "Realme 11", "price": 22990, "brand": "Realme",  "color": "золотой"},
+    {"name": "Nothing Phone (1)", "price": 34990, "brand": "Nothing", "color": "черный"},
+    {"name": "Moto G54", "price": 15990, "brand": "Motorola","color": "зеленый"},
+    {"name": "Honor 90", "price": 42990, "brand": "Honor",   "color": "серебристый"},
+    {"name": "Poco F5", "price": 33990, "brand": "Xiaomi",  "color": "белый"},
+    {"name": "Galaxy A55", "price": 29990, "brand": "Samsung", "color": "голубой"},
+    {"name": "iPhone SE", "price": 39990, "brand": "Apple",   "color": "красный"},
+    {"name": "Pixel 6a", "price": 32990, "brand": "Google",  "color": "мятный"},
+    {"name": "Infinix Note 30", "price": 14990, "brand": "Infinix", "color": "черный"},
+    {"name": "Tecno Pova 5", "price": 13990, "brand": "Tecno",   "color": "синий"},
+    {"name": "Vivo V29", "price": 37990, "brand": "Vivo",    "color": "черный"},
+    {"name": "OPPO Reno10", "price": 35990, "brand": "OPPO",    "color": "серый"},
+    {"name": "Sony Xperia 10 V", "price": 44990, "brand": "Sony",    "color": "белый"},
+    {"name": "Nokia G42", "price": 16990, "brand": "Nokia",   "color": "фиолетовый"},
+    {"name": "Asus Zenfone 9", "price": 55990, "brand": "ASUS",    "color": "черный"},
+    {"name": "OnePlus Nord 3", "price": 39990, "brand": "OnePlus", "color": "зеленый"},
+    {"name": "Huawei nova 11", "price": 32990, "brand": "Huawei",  "color": "черный"},
+    {"name": "Meizu 20", "price": 28990, "brand": "Meizu",   "color": "серебристый"},
+]
+
+
+def overall_min_max():
+    prices = [p["price"] for p in PRODUCTS]
+    return (min(prices), max(prices))
+
+
+def apply_filters(items, min_p, max_p):
+    result = []
+    for it in items:
+        price = it["price"]
+        if min_p is not None and price < min_p:
+            continue
+        if max_p is not None and price > max_p:
+            continue
+        result.append(it)
+    return result
+
+
+@lab3.route('/lab3/products', methods=['GET'])
+def products_filter():
+    # Глобальные мин/макс для плейсхолдеров
+    glob_min, glob_max = overall_min_max()
+
+    # Кнопка сброса: очищаем куки и показываем все
+    if request.args.get('action') == 'reset':
+        resp = make_response(render_template(
+            'lab3/products.html',
+            items=PRODUCTS,
+            count=len(PRODUCTS),
+            glob_min=glob_min, glob_max=glob_max,
+            cur_min='', cur_max='',  # поля пустые
+            message=None
+        ))
+        resp.delete_cookie('min_price')
+        resp.delete_cookie('max_price')
+        return resp
+
+    # Берем значения: сначала из query, если пусто — из cookie
+    min_s = request.args.get('min', default=None)
+    max_s = request.args.get('max', default=None)
+
+    # Если пользователь не передал параметры, но есть куки — подставим их
+    if (min_s is None or min_s == ''):
+        min_s = request.cookies.get('min_price', default='')
+    if (max_s is None or max_s == ''):
+        max_s = request.cookies.get('max_price', default='')
+
+    # Преобразуем к числам (пустые оставляем None)
+    def to_int_or_none(s):
+        if s is None or s == '':
+            return None
+        try:
+            return int(s)
+        except:
+            return None
+
+    min_v = to_int_or_none(min_s)
+    max_v = to_int_or_none(max_s)
+
+    # Если оба заданы и перепутаны — меняем местами
+    if min_v is not None and max_v is not None and min_v > max_v:
+        min_v, max_v = max_v, min_v
+        # и в форме поменяем местами
+        min_s, max_s = (str(min_v), str(max_v))
+
+    # Фильтруем (если оба None — покажем все)
+    filtered = apply_filters(PRODUCTS, min_v, max_v)
+    message = None
+    if len(filtered) == 0:
+        message = "Не найдено ни одного товара"
+
+    # Готовим ответ и ставим куки, если пользователь передал фильтры
+    resp = make_response(render_template(
+        'lab3/products.html',
+        items=filtered,
+        count=len(filtered),
+        glob_min=glob_min, glob_max=glob_max,
+        cur_min=min_s or '',
+        cur_max=max_s or '',
+        message=message
+    ))
+
+    # Сохраняем куки только если хотя бы одно из значений было в запросе
+    # (т.е. человек нажал «Искать»)
+    if 'min' in request.args or 'max' in request.args:
+        # Пустые очищаем
+        if min_v is None:
+            resp.delete_cookie('min_price')
+        else:
+            resp.set_cookie('min_price', str(min_v))
+        if max_v is None:
+            resp.delete_cookie('max_price')
+        else:
+            resp.set_cookie('max_price', str(max_v))
+
+    return resp

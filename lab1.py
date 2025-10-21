@@ -36,8 +36,8 @@ def author():
 
 @lab1.route('/lab1/image')
 def image():
-    path = url_for('static', filename='дуб.jpg')
-    css = url_for('static', filename='lab1.css')
+    path = url_for('static', filename='lab1/дуб.jpg')
+    css = url_for('static', filename='lab1/lab1.css')
 
     html = f'''<!doctype html>
         <html>
@@ -119,7 +119,7 @@ def created():
 
 @lab1.route('/404')
 def error404():
-    dog = url_for('static', filename='404.jpg')
+    dog = url_for('static', filename='lab1/404.jpg')
     return '''<!doctype html>
     <html>
         <head>

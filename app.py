@@ -36,7 +36,7 @@ def index():
 
 @app.errorhandler(500)
 def internal_error(err):
-    e500 = url_for('static', filename='500.webp')
+    e500 = url_for('static', filename='lab1/500.webp')
     return '''<!doctype html>
         <html>
             <head>

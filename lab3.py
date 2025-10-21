@@ -114,6 +114,16 @@ def settings():
     return resp
 
 
+@lab3.route('/lab3/clear_cookies')
+def clear_cookies():
+    resp = make_response(redirect('/lab3/settings'))
+    resp.delete_cookie('color')
+    resp.delete_cookie('bgcolor')
+    resp.delete_cookie('fontsize')
+    resp.delete_cookie('lineheight')
+    return resp
+
+
 @lab3.route('/lab3/ticket/order',  methods=['GET'])
 def ticket_order():
     return render_template('lab3/ticket_order.html', errors=None, form_data={})

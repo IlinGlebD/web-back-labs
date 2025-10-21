@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 3{% endblock %}
+
+{% block main %}
+
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background:#f2f2f2; 
+            padding:20px; 
+        }
+        h1 { 
+            text-align:center; 
+            color:#333; 
+        }
+        form { 
+            background:#fff; 
+            padding:20px; 
+            border-radius:8px; 
+            max-width:500px; 
+            margin:0 auto; 
+            box-shadow:0 0 8px rgba(0,0,0,.1); 
+        }
+        p { 
+            margin-bottom:15px; 
+        }
+        input[type="text"], input[type="number"], input[type="date"], select {
+            width:100%; 
+            padding:8px; 
+            border:1px solid #ccc; 
+            border-radius:6px;
+        }
+        input[type="radio"] { 
+            width:auto; 
+            margin:0; 
+        }
+        .radios { 
+            display:flex; 
+            gap:16px; 
+            align-items:center; 
+        }
+        .radios label { 
+            display:flex; 
+            align-items:center; 
+            gap:6px; margin:0; 
+        }
+        button { 
+            background:#007bff; 
+            color:#fff; 
+            border:none; 
+            padding:10px 15px; 
+            border-radius:6px; 
+            cursor:pointer; 
+        }
+        button:hover { 
+            background:#0056b3; 
+        }
+        ul { 
+            color:red; 
+            list-style:square; 
+            margin-bottom:15px; 
+        }
+    </style>
+
+    <h1>Оформление железнодорожного билета</h1>
+
+    {% if errors %}
+    <ul>
+        {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('lab3.ticket_submit') }}">
+        <p>
+            ФИО пассажира:<br>
+            <input type="text" name="full_name" value="{{ form_data.full_name|default('') }}">
+        </p>
+
+        <p>
+            Возраст:<br>
+            <input type="number" name="age" min="1" max="120" value="{{ form_data.age|default('') }}">
+        </p>
+
+        <p>
+            Дата поездки:<br>
+            <input type="date" name="trip_date" value="{{ form_data.trip_date|default('') }}">
+        </p>
+
+        <p>
+            Пункт выезда:<br>
+            <input type="text" name="origin" value="{{ form_data.origin|default('') }}">
+        </p>
+
+        <p>
+            Пункт назначения:<br>
+            <input type="text" name="destination" value="{{ form_data.destination|default('') }}">
+        </p>
+
+        <p>
+            Полка:<br>
+            <select name="berth">
+            <option value="" {% if not form_data.berth %}selected{% endif %}>-- выберите --</option>
+            <option value="нижняя" {% if form_data.berth=='нижняя' %}selected{% endif %}>нижняя</option>
+            <option value="верхняя" {% if form_data.berth=='верхняя' %}selected{% endif %}>верхняя</option>
+            <option value="верхняя боковая" {% if form_data.berth=='верхняя боковая' %}selected{% endif %}>верхняя боковая</option>
+            <option value="нижняя боковая" {% if form_data.berth=='нижняя боковая' %}selected{% endif %}>нижняя боковая</option>
+            </select>
+        </p>
+
+        <p>
+            С бельём:<br>
+            <div class="radios">
+                <label><input type="radio" name="bedding" value="yes" {% if form_data.bedding=='yes' %}checked{% endif %}>Да</label>
+                <label><input type="radio" name="bedding" value="no"  {% if form_data.bedding=='no' %}checked{% endif %}>Нет</label>
+            </div>
+        </p>
+          
+        <p>
+            С багажом:<br>
+            <div class="radios">
+                <label><input type="radio" name="baggage" value="yes" {% if form_data.baggage=='yes' %}checked{% endif %}>Да</label>
+                <label><input type="radio" name="baggage" value="no"  {% if form_data.baggage=='no' %}checked{% endif %}>Нет</label>
+            </div>
+        </p>
+          
+        <p>
+            Нужна страховка:<br>
+            <div class="radios">
+                <label><input type="radio" name="insurance" value="yes" {% if form_data.insurance=='yes' %}checked{% endif %}>Да</label>
+                <label><input type="radio" name="insurance" value="no"  {% if form_data.insurance=='no' %}checked{% endif %}>Нет</label>
+            </div>
+        </p>
+
+        <p style="text-align:center;">
+            <button type="submit">Сформировать билет</button>
+        </p>
+    </form>
+{% endblock %}

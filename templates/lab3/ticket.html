@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 3{% endblock %}
+
+{% block main %}
+
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
+            margin: 24px; 
+            background: #f7f7fb; 
+        }
+        .ticket { 
+            max-width: 720px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 14px; 
+            box-shadow: 0 6px 24px rgba(0,0,0,.08); 
+            overflow: hidden; 
+        }
+        .header { 
+            background: #2a6df4; 
+            color: white; 
+            padding: 16px 20px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .body { 
+            padding: 20px; 
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+        }
+        .row { 
+            margin-bottom: 8px; 
+        }
+        .label { 
+            color: #666; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: .04em; 
+        }
+        .value { 
+            font-size: 16px; 
+        }
+        .badge { 
+            background: #ffe7a3; 
+            color: #8a5a00; 
+            padding: 4px 10px; 
+            border-radius: 999px; 
+            font-size: 12px; 
+        }
+        .price { 
+            font-size: 28px; 
+            font-weight: 700; 
+        }
+        .split { 
+            height: 1px; 
+            background: #eee; 
+            margin: 16px 0; 
+        }
+        ul { 
+            margin: 8px 0 0 18px; 
+        }
+    </style>
+
+    <div class="ticket">
+        <div class="header">
+            <div>
+                <div style="opacity:.9">Железнодорожный билет</div>
+                {% if is_child %}<div class="badge" style="margin-top:6px;">Детский билет</div>{% endif %}
+            </div>
+            <div class="price">{{ price }} ₽</div>
+        </div>
+        <div class="body">
+            <div class="grid">
+                <div class="row"><div class="label">Пассажир</div><div class="value">{{ full_name }}</div></div>
+                <div class="row"><div class="label">Возраст</div><div class="value">{{ age }}</div></div>
+
+                <div class="row"><div class="label">Маршрут</div><div class="value">{{ origin }} → {{ destination }}</div></div>
+                <div class="row"><div class="label">Дата поездки</div><div class="value">{{ trip_date.strftime('%d.%m.%Y') }}</div></div>
+
+                <div class="row"><div class="label">Полка</div><div class="value">{{ berth }}</div></div>
+                <div class="row"><div class="label">Бельё</div><div class="value">{{ 'Да' if bedding else 'Нет' }}</div></div>
+
+                <div class="row"><div class="label">Багаж</div><div class="value">{{ 'Да' if baggage else 'Нет' }}</div></div>
+                <div class="row"><div class="label">Страховка</div><div class="value">{{ 'Да' if insurance else 'Нет' }}</div></div>
+            </div>
+
+            <div class="split"></div>
+
+            <div class="row">
+                <div class="label">Расчёт стоимости</div>
+                <ul>
+                    {% for name, val in breakdown %}
+                    <li>{{ name }}: +{{ val }} ₽</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -9,6 +9,7 @@ app.register_blueprint(lab1)
 app.register_blueprint(lab2)
 app.register_blueprint(lab3)
 
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -33,6 +34,7 @@ def index():
                 </footer>
             </body>
         </html>'''
+
 
 @app.errorhandler(500)
 def internal_error(err):
@@ -83,8 +85,10 @@ def internal_error(err):
         </html>
         ''', 500
 
+
 # Журнал посещений
 access_log = []
+
 
 @app.errorhandler(404)
 def not_found(err):

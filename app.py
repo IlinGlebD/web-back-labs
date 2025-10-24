@@ -11,6 +11,7 @@ app.register_blueprint(lab2)
 app.register_blueprint(lab3)
 app.register_blueprint(lab4)
 
+app.secret_key = 'секретно-секретный секрет'
 
 @app.route('/')
 @app.route('/index')

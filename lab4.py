@@ -343,7 +343,7 @@ def register():
                 })
                 # сразу логиним
                 session['login'] = login_form
-                return redirect('/lab4/users')
+                return redirect('/lab4/login')
 
     return render_template('/lab4/register.html', error=error)
 

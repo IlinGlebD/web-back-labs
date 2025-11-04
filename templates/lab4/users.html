@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block lab %}Лабораторная работа 4{% endblock %}
+
+{% block main %}
+    <h1>Пользователи</h1>
+
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Имя</th>
+            <th>Логин</th>
+            <th>Действия</th>
+        </tr>
+        {% for u in users %}
+            <tr>
+                <td>{{ u.name }}</td>
+                <td>{{ u.login }}</td>
+                <td>
+                    {% if u.login == current_login %}
+                        <a href="/lab4/edit">Редактировать</a>
+                        <form action="/lab4/delete" method="post" style="display: inline;">
+                            <button type="submit">Удалить себя</button>
+                        </form>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <p style="margin-top: 10px;">
+        <a href="/lab4/login">На главную (логин)</a>
+    </p>
+{% endblock %}

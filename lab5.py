@@ -9,7 +9,7 @@ def lab():
     return render_template('lab5/lab5.html')
 
 
-@lab5.route('/lab5/register', methods = ['GET', 'POST'])
+@lab5.route('/lab5/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
         return render_template('lab5/register.html')
@@ -18,11 +18,21 @@ def register():
     if not (login or password):
         return render_template('lab5/register.html', error='Заполните все поля')
     conn = psycopg2.connect(
-        host = '127.0.0.1',
-        database = 'ilin_gleb_knowledge_base',
-        user = 'ilin_gleb_knowledge_base',
-        password = '123'
+        host='127.0.0.1',
+        database='ilin_gleb_knowledge_base',
+        user='ilin_gleb_knowledge_base',
+        password='123'
     )
     cur = conn.cursor()
 
     cur.execute(f"SELECT login FROM users WHERE login='{login}';")
+    if cur.fetchone():
+        cur.close()
+        conn.close()
+        return render_template('lab5/register.html',
+                               error='Такой пользователь не найден')
+    cur.execute(f"INSERT INTO users (login, password) VALUES ('{login}', '{password}');")
+    conn.commit()
+    cur.close()
+    conn.close()
+    return render_template('lab5/success.html', login=login)

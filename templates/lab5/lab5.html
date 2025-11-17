@@ -76,7 +76,11 @@
     </ol>
     
     <div class="user-info">
-        Anonymous
+        {% if login %}
+            {{ login }}
+        {% else %}
+            Anonymous
+        {% endif %}
     </div>
 </div>
 {% endblock %}

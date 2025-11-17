@@ -15,20 +15,30 @@ def lab():
 
 
 def db_connect():
-    if current_app.config['DB_TYPE'] == 'postgres':
-        conn = psycopg2.connect(
-            host='127.0.0.1',
-            database='ilin_gleb_knowledge_base',
-            user='ilin_gleb_knowledge_base',
-            password='123'
-        )
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-    else:
-        dir_path = path.dirname(path.realpath(__file__))
-        db_path = path.join(dir_path, "database.db")
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
+    # Пытаемся использовать PostgreSQL, если недоступен - переключаемся на SQLite
+    db_type = current_app.config.get('DB_TYPE', 'postgres')
+
+    if db_type == 'postgres':
+        try:
+            conn = psycopg2.connect(
+                host='127.0.0.1',
+                database='ilin_gleb_knowledge_base',
+                user='ilin_gleb_knowledge_base',
+                password='123'
+            )
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            return conn, cur
+        except psycopg2.OperationalError:
+            # Если PostgreSQL недоступен, автоматически переключаемся на SQLite
+            print("PostgreSQL недоступен, используется SQLite")
+            db_type = 'sqlite'
+    
+    # Используем SQLite
+    dir_path = path.dirname(path.realpath(__file__))
+    db_path = path.join(dir_path, "database.db")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
     return conn, cur
 
 

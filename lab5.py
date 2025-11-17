@@ -27,12 +27,13 @@ def db_connect():
                 password='123'
             )
             cur = conn.cursor(cursor_factory=RealDictCursor)
+            current_app.config['ACTIVE_DB_TYPE'] = 'postgres'
             return conn, cur
         except psycopg2.OperationalError:
             # Если PostgreSQL недоступен, автоматически переключаемся на SQLite
             print("PostgreSQL недоступен, используется SQLite")
             db_type = 'sqlite'
-    
+
     # Используем SQLite
     dir_path = path.dirname(path.realpath(__file__))
     db_path = path.join(dir_path, "database.db")
@@ -54,12 +55,17 @@ def register():
         return render_template('lab5/register.html')
     login = request.form.get('login')
     password = request.form.get('password')
-    if not (login or password):
+    
+    # ИСПРАВЛЕНИЕ: используем AND вместо OR
+    if not (login and password):
         return render_template('lab5/register.html', error='Заполните все поля')
 
     conn, cur = db_connect()
 
-    if current_app.config['DB_TYPE'] == 'postgres':
+    # Используем ACTIVE_DB_TYPE вместо DB_TYPE
+    db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
+    
+    if db_type == 'postgres':
         cur.execute("SELECT login FROM users WHERE login=%s;", (login, ))
     else:
         cur.execute("SELECT login FROM users WHERE login=?;", (login, ))
@@ -70,7 +76,7 @@ def register():
                                error='Такой пользователь уже существует')
 
     password_hash = generate_password_hash(password)
-    if current_app.config['DB_TYPE'] == 'postgres':
+    if db_type == 'postgres':
         cur.execute("INSERT INTO users (login, password) VALUES (%s, %s);",
                     (login, password_hash, ))
     else:
@@ -86,11 +92,16 @@ def login():
         return render_template('lab5/login.html')
     login = request.form.get('login')
     password = request.form.get('password')
-    if not (login or password):
-        return render_template('lab5/login.html', error='Заполните имя')
+    
+    # ИСПРАВЛЕНИЕ: используем AND вместо OR
+    if not (login and password):
+        return render_template('lab5/login.html', error='Заполните все поля')
+    
     conn, cur = db_connect()
 
-    if current_app.config['DB_TYPE'] == 'postgres':
+    db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
+    
+    if db_type == 'postgres':
         cur.execute("SELECT * FROM users WHERE login=%s;", (login, ))
     else:
         cur.execute("SELECT * FROM users WHERE login=?;", (login, ))
@@ -124,13 +135,16 @@ def create():
 
     conn, cur = db_connect()
 
-    if current_app.config['DB_TYPE'] == 'postgres':
+    db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
+    
+    if db_type == 'postgres':
         cur.execute("SELECT * FROM users WHERE login=%s;", (login, ))
     else:
         cur.execute("SELECT * FROM users WHERE login=?;", (login, ))
-    login_id = cur.fetchone()["id"]
+    user = cur.fetchone()
+    login_id = user["id"]
 
-    if current_app.config['DB_TYPE'] == 'postgres':
+    if db_type == 'postgres':
         cur.execute(
             "INSERT INTO articles (user_id, title, article_text) VALUES (%s, %s, %s)",
             (login_id, title, article_text)
@@ -146,20 +160,23 @@ def create():
 
 
 @lab5.route('/lab5/list')
-def list():
+def list_articles():
     login = session.get('login')
     if not login:
         return redirect('/lab5/login')
 
     conn, cur = db_connect()
 
-    if current_app.config['DB_TYPE'] == 'postgres':
+    db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
+    
+    if db_type == 'postgres':
         cur.execute("SELECT id FROM users WHERE login=%s;", (login, ))
     else:
         cur.execute("SELECT id FROM users WHERE login=?;", (login, ))
-    login_id = cur.fetchone()["id"]
+    user = cur.fetchone()
+    login_id = user["id"]
 
-    if current_app.config['DB_TYPE'] == 'postgres':
+    if db_type == 'postgres':
         cur.execute("SELECT * FROM articles WHERE user_id=%s;", (login_id, ))
     else:
         cur.execute("SELECT * FROM articles WHERE user_id=?;", (login_id, ))

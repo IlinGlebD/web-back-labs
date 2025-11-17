@@ -92,15 +92,14 @@ def login():
         return render_template('lab5/login.html')
     login = request.form.get('login')
     password = request.form.get('password')
-    
-    # ИСПРАВЛЕНИЕ: используем AND вместо OR
-    if not (login and password):
+
+    if not (login or password):
         return render_template('lab5/login.html', error='Заполните все поля')
-    
+
     conn, cur = db_connect()
 
     db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
-    
+
     if db_type == 'postgres':
         cur.execute("SELECT * FROM users WHERE login=%s;", (login, ))
     else:
@@ -136,7 +135,7 @@ def create():
     conn, cur = db_connect()
 
     db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
-    
+
     if db_type == 'postgres':
         cur.execute("SELECT * FROM users WHERE login=%s;", (login, ))
     else:
@@ -168,7 +167,7 @@ def list_articles():
     conn, cur = db_connect()
 
     db_type = current_app.config.get('ACTIVE_DB_TYPE', 'sqlite')
-    
+
     if db_type == 'postgres':
         cur.execute("SELECT id FROM users WHERE login=%s;", (login, ))
     else:

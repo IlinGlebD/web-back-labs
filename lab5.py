@@ -113,9 +113,13 @@ def login():
         db_close(conn, cur)
         return render_template('lab5/login.html',
                                error='Логин и/или пароль неверны')
+
     session['login'] = login
     session['user_id'] = user['id']
-    session['real_name'] = user.get('real_name', '')
+    
+    user_dict = dict(user)
+    session['real_name'] = user_dict.get('real_name', '')
+    
     db_close(conn, cur)
     return render_template('lab5/success_login.html',
                            login=login)
@@ -355,7 +359,9 @@ def profile():
         
         user = cur.fetchone()
         db_close(conn, cur)
-        return render_template('lab5/profile.html', user=user)
+
+        user_data = {'real_name': user['real_name'] if user and user['real_name'] else ''}
+        return render_template('lab5/profile.html', user=user_data)
 
     # Обработка изменения профиля
     real_name = request.form.get('real_name')

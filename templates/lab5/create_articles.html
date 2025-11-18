@@ -18,6 +18,20 @@
             <textarea name="article_text" required></textarea>
         </div>
 
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_public">
+                Сделать публичной
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_favorite">
+                Добавить в избранное
+            </label>
+        </div>
+
         {% if error %}
             <div class="error-message">{{ error }}</div>
         {% endif %}

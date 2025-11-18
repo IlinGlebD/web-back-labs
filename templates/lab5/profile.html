@@ -3,32 +3,27 @@
 {% block lab %}Лабораторная работа 5{% endblock %}
 
 {% block main %}
-    <h1>Редактирование статьи</h1>
+    <h1>Редактирование профиля</h1>
 
     <form method="post" class="lab5-form">
         <div class="form-group">
             <label>
-                Название статьи:
-                <input type="text" maxlength="50" name="title" value="{{ article['title'] }}" required>
-            </label>
-        </div>
-
-        <div class="form-group">
-            <label>Текст статьи:</label>
-            <textarea name="article_text" required>{{ article['article_text'] }}</textarea>
-        </div>
-
-        <div class="form-group">
-            <label>
-                <input type="checkbox" name="is_public" {{ 'checked' if article['is_public'] }}>
-                Сделать публичной
+                Реальное имя:
+                <input type="text" name="real_name" value="{{ user['real_name'] or '' }}">
             </label>
         </div>
 
         <div class="form-group">
             <label>
-                <input type="checkbox" name="is_favorite" {{ 'checked' if article['is_favorite'] }}>
-                Добавить в избранное
+                Новый пароль:
+                <input type="password" name="new_password" placeholder="Оставьте пустым, если не хотите менять">
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Подтверждение пароля:
+                <input type="password" name="confirm_password" placeholder="Подтвердите новый пароль">
             </label>
         </div>
 

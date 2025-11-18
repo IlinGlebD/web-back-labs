@@ -10,6 +10,12 @@
     {% else %}
         {% for article in articles %}
             <div class="article-item">
+                {% if article['is_favorite'] %}
+                    <span style="color: gold; font-weight: bold;">★ Избранная</span>
+                {% endif %}
+                {% if article['is_public'] %}
+                    <span style="color: green; font-weight: bold;">🌐 Публичная</span>
+                {% endif %}
                 <h2 class="article-title">{{ article['title'] }}</h2>
                 <div class="article-text">{{ article['article_text'] }}</div>
                 <div style="margin-top: 15px;">
@@ -23,6 +29,9 @@
 
     <div style="margin-top: 20px;">
         <a href="/lab5/create" class="btn">Создать новую статью</a>
+        <a href="/lab5/public" class="btn">Публичные статьи</a>
+        <a href="/lab5/users" class="btn">Список пользователей</a>
+        <a href="/lab5/profile" class="btn">Редактировать профиль</a>
         <a href="/lab5/logout" class="btn">Выйти из системы</a>
     </div>
 {% endblock %}

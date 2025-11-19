@@ -1,5 +1,5 @@
 from flask import (Blueprint, render_template, request, session, redirect,
-                   current_app, url_for)
+                   current_app)
 import psycopg2
 import sqlite3
 from os import path
@@ -58,7 +58,8 @@ def register():
     real_name = request.form.get('real_name')
 
     if not (login and password):
-        return render_template('lab5/register.html', error='Заполните логин и пароль')
+        return render_template('lab5/register.html',
+                               error='Заполните логин и пароль')
 
     conn, cur = db_connect()
 
@@ -116,10 +117,10 @@ def login():
 
     session['login'] = login
     session['user_id'] = user['id']
-    
+
     user_dict = dict(user)
     session['real_name'] = user_dict.get('real_name', '')
-    
+
     db_close(conn, cur)
     return render_template('lab5/success_login.html',
                            login=login)
@@ -144,12 +145,12 @@ def create():
 
     title = request.form.get('title')
     article_text = request.form.get('article_text')
-    is_public = request.form.get('is_public') == 'on'
+    is_public = request.form.get('is_public') == 'on'  # True/False
     is_favorite = request.form.get('is_favorite') == 'on'
 
     # Валидация - проверка на пустые поля
     if not title or not article_text:
-        return render_template('lab5/create_articles.html', 
+        return render_template('lab5/create_articles.html',
                                error='Заполните название и текст статьи')
 
     conn, cur = db_connect()
@@ -165,12 +166,14 @@ def create():
 
     if db_type == 'postgres':
         cur.execute(
-            "INSERT INTO articles (user_id, title, article_text, is_public, is_favorite) VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO articles (user_id, title, article_text, is_public,"
+            "is_favorite) VALUES (%s, %s, %s, %s, %s)",
             (login_id, title, article_text, is_public, is_favorite)
             )
     else:
         cur.execute(
-            "INSERT INTO articles (user_id, title, article_text, is_public, is_favorite) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO articles (user_id, title, article_text, is_public,"
+            "is_favorite) VALUES (?, ?, ?, ?, ?)",
             (login_id, title, article_text, is_public, is_favorite)
             )
 
@@ -197,18 +200,22 @@ def list_articles():
 
     # Сначала избранные, потом остальные
     if db_type == 'postgres':
-        cur.execute("SELECT * FROM articles WHERE user_id=%s ORDER BY is_favorite DESC, id DESC;", (login_id, ))
+        cur.execute("SELECT * FROM articles WHERE user_id=%s ORDER BY is_favorite DESC, id DESC;",
+                    (login_id, ))
     else:
-        cur.execute("SELECT * FROM articles WHERE user_id=? ORDER BY is_favorite DESC, id DESC;", (login_id, ))
+        cur.execute("SELECT * FROM articles WHERE user_id=? ORDER BY is_favorite DESC, id DESC;",
+                    (login_id, ))
     articles = cur.fetchall()
 
     db_close(conn, cur)
-    
+
     # Проверка на отсутствие статей
     if not articles:
-        return render_template('/lab5/articles.html', articles=articles, no_articles=True)
-    
-    return render_template('/lab5/articles.html', articles=articles, no_articles=False)
+        return render_template('/lab5/articles.html', articles=articles,
+                               no_articles=True)
+
+    return render_template('/lab5/articles.html', articles=articles,
+                           no_articles=False)
 
 
 @lab5.route('/lab5/public')
@@ -219,25 +226,26 @@ def public_articles():
     # Получаем публичные статьи с именами авторов
     if db_type == 'postgres':
         cur.execute("""
-            SELECT a.*, u.login, u.real_name 
-            FROM articles a 
-            JOIN users u ON a.user_id = u.id 
-            WHERE a.is_public = true 
+            SELECT a.*, u.login, u.real_name
+            FROM articles a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.is_public = true
             ORDER BY a.is_favorite DESC, a.id DESC
         """)
     else:
         cur.execute("""
-            SELECT a.*, u.login, u.real_name 
-            FROM articles a 
-            JOIN users u ON a.user_id = u.id 
-            WHERE a.is_public = 1 
+            SELECT a.*, u.login, u.real_name
+            FROM articles a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.is_public = 1
             ORDER BY a.is_favorite DESC, a.id DESC
         """)
-    
+
     articles = cur.fetchall()
     db_close(conn, cur)
-    
-    return render_template('/lab5/public_articles.html', articles=articles, login=session.get('login'))
+
+    return render_template('/lab5/public_articles.html', articles=articles,
+                           login=session.get('login'))
 
 
 @lab5.route('/lab5/edit/<int:article_id>', methods=['GET', 'POST'])
@@ -251,14 +259,14 @@ def edit_article(article_id):
 
     # Проверяем, принадлежит ли статья текущему пользователю
     if db_type == 'postgres':
-        cur.execute("SELECT * FROM articles WHERE id=%s AND user_id=%s;", 
+        cur.execute("SELECT * FROM articles WHERE id=%s AND user_id=%s;",
                     (article_id, session.get('user_id')))
     else:
-        cur.execute("SELECT * FROM articles WHERE id=? AND user_id=?;", 
+        cur.execute("SELECT * FROM articles WHERE id=? AND user_id=?;",
                     (article_id, session.get('user_id')))
-    
+
     article = cur.fetchone()
-    
+
     if not article:
         db_close(conn, cur)
         return redirect('/lab5/list')
@@ -276,8 +284,8 @@ def edit_article(article_id):
     # Валидация - проверка на пустые поля
     if not title or not article_text:
         db_close(conn, cur)
-        return render_template('lab5/edit_article.html', 
-                               article=article, 
+        return render_template('lab5/edit_article.html',
+                               article=article,
                                error='Заполните название и текст статьи')
 
     # Обновление статьи
@@ -303,14 +311,14 @@ def delete_article(article_id):
 
     # Проверяем, принадлежит ли статья текущему пользователю
     if db_type == 'postgres':
-        cur.execute("SELECT * FROM articles WHERE id=%s AND user_id=%s;", 
+        cur.execute("SELECT * FROM articles WHERE id=%s AND user_id=%s;",
                     (article_id, session.get('user_id')))
     else:
-        cur.execute("SELECT * FROM articles WHERE id=? AND user_id=?;", 
+        cur.execute("SELECT * FROM articles WHERE id=? AND user_id=?;",
                     (article_id, session.get('user_id')))
-    
+
     article = cur.fetchone()
-    
+
     if article:
         # Удаляем статью
         if db_type == 'postgres':
@@ -335,10 +343,10 @@ def users_list():
         cur.execute("SELECT login, real_name FROM users ORDER BY login;")
     else:
         cur.execute("SELECT login, real_name FROM users ORDER BY login;")
-    
+
     users = cur.fetchall()
     db_close(conn, cur)
-    
+
     return render_template('/lab5/users.html', users=users)
 
 
@@ -353,14 +361,19 @@ def profile():
 
     if request.method == 'GET':
         if db_type == 'postgres':
-            cur.execute("SELECT real_name FROM users WHERE id=%s;", (session.get('user_id'),))
+            cur.execute("SELECT real_name FROM users WHERE id=%s;",
+                        (session.get('user_id'),))
         else:
-            cur.execute("SELECT real_name FROM users WHERE id=?;", (session.get('user_id'),))
-        
+            cur.execute("SELECT real_name FROM users WHERE id=?;",
+                        (session.get('user_id'),))
+
         user = cur.fetchone()
         db_close(conn, cur)
 
-        user_data = {'real_name': user['real_name'] if user and user['real_name'] else ''}
+        if user and user['real_name']:
+            user_data = {'real_name': user['real_name']}
+        else:
+            user_data = {'real_name': ''}
         return render_template('lab5/profile.html', user=user_data)
 
     # Обработка изменения профиля
@@ -371,8 +384,8 @@ def profile():
     # Проверка подтверждения пароля
     if new_password and new_password != confirm_password:
         db_close(conn, cur)
-        return render_template('lab5/profile.html', 
-                               user={'real_name': real_name}, 
+        return render_template('lab5/profile.html',
+                               user={'real_name': real_name},
                                error='Пароли не совпадают')
 
     # Обновление данных

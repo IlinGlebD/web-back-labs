@@ -2,10 +2,42 @@
 
 {% block lab %}Лабораторная работа 6{% endblock %}
 
-{% block main %}
-    <h1>API JSON-RPC</h1>
-    <div>Тема лабораторной - API JSON-RPC. Список сделанных страниц:</div>
-    <ol>
+{% block script %}
+<script>
+    function getOfficeList() {
+        const url = '/lab/json-rpc-api';
+        const json = {
+            'jsonrpc': '2.0',
+            'method': 'info',
+            'id': Math.round(Math.random()*1000)
+        };
+        fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(json)
+        })
+        .then(function(responce) {
+            return responce.json()
+        })
+        .then(function(data) {
+            const office_list = data.result;
+            const ul = document.getElementById('office-list');
+            for(let i = 0; i < office_list.lenght; i++) {
+                const office = office_list[i];
+                const li = document.createElement('li');
+                li.innerText = '${office.number}: ${office.tenant || 'свободен'}';
+                ul.appendChild(li);
+            }
+        })
+    }
 
-    </ol>
+    document.addEventListener('DOMContentLoaded', function() {
+        getOfficeList();
+    })
+</script>
+{% endblock %}
+
+{% block main %}
+    <h1>Список кабинетов</h1>
+    <ul id="office-list"></ul>
 {% endblock %}

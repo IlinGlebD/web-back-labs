@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, session
 
 lab6 = Blueprint('lab6', __name__)
 
@@ -16,12 +16,45 @@ def main():
 def api():
     data = request.json
     id = data['id']
-    if data['method'] == info:
+    if data['method'] == 'info':
         return {
             'jsonrpc': '2.0',
             'result': offices,
             'id': id
         }
+
+    login = session.get('login')
+    if not login:
+        return {
+            'jsonrpc': '2.0',
+            'error': {
+                'code': 1,
+                'message': 'Unauthorized'
+            },
+            'id': id
+        }
+
+    if data['method'] == 'booking':
+        office_number = data['params']
+        for office in offices:
+            if office['number'] == office_number:
+                if office['tenant'] != '':
+                    return {
+                        'jsonrpc': '2.0',
+                        'error': {
+                            'code': 2,
+                            'message': 'Already booked'
+                        },
+                        'id': id
+                    }
+
+                office['tenant'] = login
+                return {
+                    'jsonrpc': '2.0',
+                    'result': 'success',
+                    'id': id
+                }
+
     return {
         'jsonrpc': '2.0',
         'error': {

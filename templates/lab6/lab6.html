@@ -16,8 +16,8 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(json)
         })
-        .then(function(responce) {
-            return responce.json()
+        .then(function(response) {
+            return response.json()
         })
         .then(function(data) {
             const office_list = data.result;
@@ -25,52 +25,86 @@
             ul.innerHTML = '';
             
             let totalCost = 0;
-            const login = '{{ session.get("login", "") }}'; // Получаем логин из сессии
+            const login = '{{ session.get("login", "") }}';
             
             for(let i = 0; i < office_list.length; i++) {
                 const office = office_list[i];
                 const li = document.createElement('li');
+                li.className = 'office-item';
                 
-                // Отображаем номер офиса, статус и стоимость
+                // Основная информация об офисе
+                const officeInfo = document.createElement('div');
+                officeInfo.className = 'office-info';
+                
                 let status = office.tenant ? `арендован (${office.tenant})` : 'свободен';
-                li.innerText = `Офис ${office.number}: ${status} - ${office.price} руб.`;
-    
+                let statusClass = office.tenant ? 'status-occupied' : 'status-free';
+                
+                officeInfo.innerHTML = `
+                    <div class="office-number">Офис №${office.number}</div>
+                    <div class="office-details">
+                        <span class="status ${statusClass}">${status}</span>
+                        <span class="price">${office.price} руб./мес</span>
+                    </div>
+                `;
+
+                // Контейнер для кнопок
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'button-container';
+
                 // Кнопка бронирования (только для свободных офисов)
                 if (!office.tenant) {
                     const bookingButton = document.createElement('button');
-                    bookingButton.innerText = 'зарезервировать';
+                    bookingButton.className = 'btn btn-book';
+                    bookingButton.innerHTML = '<i class="icon-book"></i>Зарезервировать';
                     bookingButton.onclick = function() {booking(office.number)};
-                    bookingButton.style.marginLeft = '10px';
-                    li.appendChild(bookingButton);
+                    buttonContainer.appendChild(bookingButton);
                 }
-    
+
                 // Кнопка освобождения (только если офис арендован текущим пользователем)
                 if (office.tenant && office.tenant === login) {
                     const cancellationButton = document.createElement('button');
-                    cancellationButton.innerText = 'освободить';
+                    cancellationButton.className = 'btn btn-cancel';
+                    cancellationButton.innerHTML = '<i class="icon-cancel"></i>Освободить';
                     cancellationButton.onclick = function() {cancellation(office.number)};
-                    cancellationButton.style.marginLeft = '10px';
-                    li.appendChild(cancellationButton);
+                    buttonContainer.appendChild(cancellationButton);
                     
                     // Добавляем к общей стоимости
                     totalCost += office.price;
                 }
-    
+
+                li.appendChild(officeInfo);
+                li.appendChild(buttonContainer);
                 ul.appendChild(li);
             }
             
             // Отображаем общую стоимость
             const totalElement = document.getElementById('total-cost');
             if (totalCost > 0) {
-                totalElement.innerText = `Общая стоимость аренды: ${totalCost} руб.`;
+                totalElement.innerHTML = `
+                    <div class="total-cost-card">
+                        <div class="total-icon">💰</div>
+                        <div class="total-info">
+                            <div class="total-label">Общая стоимость аренды</div>
+                            <div class="total-amount">${totalCost} руб./мес</div>
+                        </div>
+                    </div>
+                `;
                 totalElement.style.display = 'block';
             } else {
                 totalElement.style.display = 'none';
             }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка при загрузке данных');
         });
     }
     
     function booking(officeNumber) {
+        if (!confirm('Вы уверены, что хотите забронировать этот офис?')) {
+            return;
+        }
+        
         const url = '/lab6/json-rpc-api/';
         const json = {
             'jsonrpc': '2.0',
@@ -83,8 +117,8 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(json)
         })
-        .then(function(responce) {
-            return responce.json()
+        .then(function(response) {
+            return response.json()
         })
         .then(function(data) {
             if(data.error) {
@@ -98,15 +132,25 @@
                     case -32601:
                         alert('Странная ошибка');
                         break;
+                    default:
+                        alert('Произошла ошибка: ' + (data.error.message || 'Неизвестная ошибка'));
                 }
             }
             else {
                 getOfficeList();
             }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка при бронировании');
         });
     }
     
     function cancellation(officeNumber) {
+        if (!confirm('Вы уверены, что хотите освободить этот офис?')) {
+            return;
+        }
+        
         const url = '/lab6/json-rpc-api/';
         const json = {
             'jsonrpc': '2.0',
@@ -119,8 +163,8 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(json)
         })
-        .then(function(responce) {
-            return responce.json()
+        .then(function(response) {
+            return response.json()
         })
         .then(function(data) {
             if(data.error) {
@@ -137,11 +181,17 @@
                     case -32601:
                         alert('Странная ошибка');
                         break;
+                    default:
+                        alert('Произошла ошибка: ' + (data.error.message || 'Неизвестная ошибка'));
                 }
             }
             else {
                 getOfficeList();
             }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка при освобождении офиса');
         });
     }
     
@@ -149,10 +199,199 @@
         getOfficeList();
     });
 </script>
+
+<style>
+    .office-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 16px;
+        max-width: 800px;
+    }
+
+    .office-item {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e1e5e9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .office-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .office-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .office-number {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .office-details {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .status-free {
+        background: #e8f5e8;
+        color: #27ae60;
+        border: 1px solid #b8e6b8;
+    }
+
+    .status-occupied {
+        background: #ffeaea;
+        color: #e74c3c;
+        border: 1px solid #ffc4c4;
+    }
+
+    .price {
+        font-size: 16px;
+        font-weight: 600;
+        color: #3498db;
+    }
+
+    .button-container {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-book {
+        background: #3498db;
+        color: white;
+    }
+
+    .btn-book:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+    }
+
+    .btn-cancel {
+        background: #e74c3c;
+        color: white;
+    }
+
+    .btn-cancel:hover {
+        background: #c0392b;
+        transform: translateY(-1px);
+    }
+
+    .user-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: inline-block;
+    }
+
+    .warning-message {
+        background: #fff3cd;
+        color: #856404;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        border: 1px solid #ffeaa7;
+    }
+
+    .total-cost-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 32px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .total-icon {
+        font-size: 32px;
+    }
+
+    .total-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .total-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 4px;
+    }
+
+    .total-amount {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .icon-book:before {
+        content: "📋";
+    }
+
+    .icon-cancel:before {
+        content: "❌";
+    }
+
+    h1 {
+        color: #2c3e50;
+        margin-bottom: 24px;
+        font-weight: 700;
+    }
+
+    body {
+        background: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+</style>
 {% endblock %}
 
 {% block main %}
-    <h1>Список кабинетов</h1>
-    <ul id="office-list"></ul>
-    <div id="total-cost" style="margin-top: 20px; font-weight: bold; font-size: 18px;"></div>
+    <h1>🎯 Аренда офисов</h1>
+    
+    {% if session.get('login') %}
+        <div class="user-info">
+            👋 Вы вошли как: <strong>{{ session.get('login') }}</strong>
+        </div>
+    {% else %}
+        <div class="warning-message">
+            ⚠️ Для бронирования офисов необходимо авторизоваться
+        </div>
+    {% endif %}
+    
+    <ul id="office-list" class="office-list"></ul>
+    <div id="total-cost" style="display: none;"></div>
 {% endblock %}

@@ -56,7 +56,7 @@ def api():
     id_ = data.get('id')
     method = data.get('method')
 
-    # ---------- метод info (без авторизации) ----------
+    # метод info (без авторизации)
     if method == 'info':
         conn, cur = db_connect()
         try:
@@ -97,7 +97,7 @@ def api():
     use_sqlite = isinstance(conn, sqlite3.Connection)
     ph = '?' if use_sqlite else '%s'   # placeholder
 
-    # ---------- booking ----------
+    # booking
     if method == 'booking':
         try:
             office_number = int(data['params'])
@@ -153,7 +153,7 @@ def api():
         finally:
             db_close(conn, cur)
 
-    # ---------- cancellation ----------
+    # cancellation
     if method == 'cancellation':
         try:
             office_number = int(data['params'])
@@ -221,7 +221,7 @@ def api():
         finally:
             db_close(conn, cur)
 
-    # ---------- неизвестный метод ----------
+    # неизвестный метод
     db_close(conn, cur)
     return {
         'jsonrpc': '2.0',

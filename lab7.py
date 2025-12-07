@@ -2,9 +2,11 @@ from flask import Blueprint, render_template, request, abort
 
 lab7 = Blueprint('lab7', __name__)
 
+
 @lab7.route('/lab7/')
 def main():
     return render_template('lab7/index.html')
+
 
 films = [
     {
@@ -119,4 +121,3 @@ def add_film():
     films.append(film)
     new_index = len(films) - 1
     return {"id": new_index, "film": film}, 201
-

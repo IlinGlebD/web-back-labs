@@ -9,12 +9,12 @@ function fillFilmList() {
         for(let i = 0; i<films.length; i++) {
             let tr = document.createElement('tr');
 
-            let tdTitle = document.createElement('id');
+            let tdTitle = document.createElement('td');
             let tdTitleRus = document.createElement('td');
             let tdYear = document.createElement('td');
-            let tdAction = document.createElement('id');
+            let tdAction = document.createElement('td');
 
-            tdTitle.innerHTML = films[i].title == films[i].title_ru ? '' : films[i].title;
+            tdTitle.innerHTML = films[i].title === films[i].title_ru ? '' : films[i].title;
             tdTitleRus.innerHTML = films[i].title_rus;
             tdYear.innerText = films[i].year;
 
@@ -24,12 +24,15 @@ function fillFilmList() {
             let delButton = document.createElement('button');
             delButton.innerText = 'удалить';
 
-            tr.append(tdTitle);
-            tr.append(tdTitleRus);
-            tr.append(tdYear);
-            tr.append(tdAction);
+            tdAction.appendChild(editButton);
+            tdAction.appendChild(delButton);
 
-            tbody.append(tr);
+            tr.appendChild(tdTitle);
+            tr.appendChild(tdTitleRus);
+            tr.appendChild(tdYear);
+            tr.appendChild(tdAction);
+
+            tbody.appendChild(tr);
         }
     })
 }

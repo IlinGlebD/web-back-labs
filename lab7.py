@@ -105,9 +105,12 @@ def del_film(id):
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
-    film = request.get_json()
-    films[id] = film
-    return films[id]
+    if 0 <= id < len(films):
+        film = request.get_json()
+        films[id] = film
+        return films[id], 200
+    else:
+        abort(404)
 
 
 @lab7.route('/lab7/rest-api/films/', methods=['PUT'])

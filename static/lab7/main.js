@@ -16,7 +16,7 @@ function fillFilmList() {
 
             tdTitleRus.innerHTML = films[i].title_ru || films[i].title || '';
 
-            if (films[i].title && films[i].title !== films[i].title_ru) {
+            if (films[i].title) {
                 tdTitle.innerHTML = `<i>(${films[i].title})</i>`;
             } else {
                 tdTitle.innerHTML = '';
@@ -59,12 +59,19 @@ function deleteFilm(id, title) {
     });
 }
 
+function clearErrors() {
+    const fields = ['title_ru-error', 'year-error', 'description-error'];
+    fields.forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerText = '';
+            el.style.display = 'none';
+        }
+    });
+}
+
 function showModal() {
-    const err = document.getElementById('description-error');
-    if (err) {
-        err.innerText = '';
-        err.style.display = 'none';
-    }
+    clearErrors();
     document.querySelector('div.modal').style.display = 'block';
 }
 
@@ -111,15 +118,35 @@ function sendFilm() {
         return resp.json();
     })
     .then(function(errors) {
-        const err = document.getElementById('description-error');
-        if (!err) return;
+        // если всё ок или ошибок нет — просто выходим
+        if (!errors) return;
 
+        // сначала очищаем старые ошибки
+        clearErrors();
+
+        // title
+        if (errors.title_ru) {
+            let el = document.getElementById('title_ru-error');
+            el.innerText = errors.title_ru;
+            el.style.display = 'block';
+        }
+
+        // ошибка для года
+        if (errors.year) {
+            const el = document.getElementById('year-error');
+            if (el) {
+                el.innerText = errors.year;
+                el.style.display = 'block';
+            }
+        }
+
+        // description
         if (errors.description) {
-            err.innerText = errors.description;
-            err.style.display = 'block';
-        } else {
-            err.innerText = '';
-            err.style.display = 'none';
+            const el = document.getElementById('description-error');
+            if (el) {
+                el.innerText = errors.description;
+                el.style.display = 'block';
+            }
         }
     });
 }

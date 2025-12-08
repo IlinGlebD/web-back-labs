@@ -1,4 +1,7 @@
+from lab5 import db_connect, db_close
+
 from flask import Blueprint, render_template, request, abort, jsonify
+from datetime import datetime
 
 lab7 = Blueprint('lab7', __name__)
 
@@ -8,7 +11,8 @@ def main():
     return render_template('lab7/index.html')
 
 
-films = [
+# начальные данные – только для первичного заполнения БД
+initial_films = [
     {
         'title': 'The Wolf of Wall Street',
         'title_ru': 'Волк с Уолл-стрит',
@@ -83,49 +87,179 @@ films = [
 ]
 
 
+def init_films_table():
+    """Создаём таблицу films и заполняем её начальными данными, если она пустая."""
+    conn, cur = db_connect()
+    try:
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS films (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                title_ru TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                description TEXT NOT NULL
+            )
+        ''')
+        # если таблица пустая – заполним начальными фильмами
+        cur.execute('SELECT COUNT(*) FROM films')
+        count = cur.fetchone()[0]
+        if count == 0:
+            for f in initial_films:
+                cur.execute(
+                    'INSERT INTO films (title, title_ru, year, description) '
+                    'VALUES (?, ?, ?, ?)',
+                    (f['title'], f['title_ru'], f['year'], f['description'])
+                )
+        conn.commit()
+    finally:
+        db_close(conn, cur)
+
+
+# вызываем инициализацию при импортe модуля
+init_films_table()
+
+
+def row_to_film(row):
+    """Преобразование строки БД в словарь фильма."""
+    return {
+        'id': row[0],
+        'title': row[1],
+        'title_ru': row[2],
+        'year': row[3],
+        'description': row[4],
+    }
+
+
 @lab7.route('/lab7/rest-api/films/', methods=['GET'])
 def get_films():
-    return jsonify(films)
+    conn, cur = db_connect()
+    try:
+        cur.execute('SELECT id, title, title_ru, year, description FROM films ORDER BY id')
+        rows = cur.fetchall()
+    finally:
+        db_close(conn, cur)
+    return jsonify([row_to_film(r) for r in rows])
 
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['GET'])
 def get_film(id):
-    if 0 <= id < len(films):
-        return films[id]
-    else:
+    conn, cur = db_connect()
+    try:
+        cur.execute(
+            'SELECT id, title, title_ru, year, description FROM films WHERE id = ?',
+            (id,)
+        )
+        row = cur.fetchone()
+    finally:
+        db_close(conn, cur)
+
+    if row is None:
         abort(404)
+
+    return row_to_film(row)
 
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['DELETE'])
 def del_film(id):
-    if 0 <= id < len(films):
-        del films[id]
-        return '', 204
-    else:
+    conn, cur = db_connect()
+    try:
+        cur.execute('DELETE FROM films WHERE id = ?', (id,))
+        deleted = cur.rowcount
+        conn.commit()
+    finally:
+        db_close(conn, cur)
+
+    if deleted == 0:
         abort(404)
+
+    return '', 204
 
 
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['PUT'])
 def put_film(id):
-    if 0 <= id < len(films):
-        film = request.get_json()
-        if film.get('title', '') == '' and film.get('title_ru', '') != '':
-            film['title'] = film['title_ru']
-        if film['description'] == '':
-            return {'description': 'Заполните описание'}, 400
-        films[id] = film
-        return films[id], 200
-    else:
+    film = request.get_json()
+
+    # русское название обязательно
+    if film.get('title_ru', '').strip() == '':
+        return {'title_ru': 'Заполните русское название'}, 400
+
+    # автозаполнение оригинального названия
+    if film.get('title', '').strip() == '':
+        film['title'] = film['title_ru']
+
+    # проверка года
+    year = int(film.get('year', ''))
+    current_year = datetime.now().year
+    if year < 1895 or year > current_year:
+        return {'year': f'Год должен быть от 1895 до {current_year}'}, 400
+
+    # проверка описания
+    description = film.get('description', '').strip()
+    if description == '':
+        return {'description': 'Заполните описание'}, 400
+    if len(description) > 2000:
+        return {'description': 'Описание не должно превышать 2000 символов'}, 400
+
+    conn, cur = db_connect()
+    try:
+        cur.execute(
+            'UPDATE films SET title = ?, title_ru = ?, year = ?, description = ? '
+            'WHERE id = ?',
+            (film['title'], film['title_ru'], year, description, id)
+        )
+        updated = cur.rowcount
+        conn.commit()
+    finally:
+        db_close(conn, cur)
+
+    if updated == 0:
         abort(404)
+
+    film['id'] = id
+    film['year'] = year
+    film['description'] = description
+    return film, 200
 
 
 @lab7.route('/lab7/rest-api/films/', methods=['POST'])
 def add_film():
     film = request.get_json()
-    if film.get('title', '') == '' and film.get('title_ru', '') != '':
+
+    # русское название обязательно
+    if film.get('title_ru', '').strip() == '':
+        return {'title_ru': 'Заполните русское название'}, 400
+
+    # автозаполнение оригинального названия
+    if film.get('title', '').strip() == '':
         film['title'] = film['title_ru']
-    if film.get('description', '') == '':
+
+    # проверка года
+    year = int(film.get('year', ''))
+    current_year = datetime.now().year
+    if year < 1895 or year > current_year:
+        return {'year': f'Год должен быть от 1895 до {current_year}'}, 400
+
+    # проверка описания
+    description = film.get('description', '').strip()
+    if description == '':
         return {'description': 'Заполните описание'}, 400
-    films.append(film)
-    new_index = len(films) - 1
-    return {"id": new_index, "film": film}, 201
+    if len(description) > 2000:
+        return {'description': 'Описание не должно превышать 2000 символов'}, 400
+
+    conn, cur = db_connect()
+    try:
+        cur.execute(
+            'INSERT INTO films (title, title_ru, year, description) '
+            'VALUES (?, ?, ?, ?)',
+            (film['title'], film['title_ru'], year, description)
+        )
+        new_id = cur.lastrowid
+        conn.commit()
+    finally:
+        db_close(conn, cur)
+
+    film['id'] = new_id
+    film['year'] = year
+    film['description'] = description
+
+    return {"id": new_id, "film": film}, 201

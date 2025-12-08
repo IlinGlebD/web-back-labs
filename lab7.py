@@ -115,8 +115,10 @@ def init_films_table():
         db_close(conn, cur)
 
 
-# вызываем инициализацию при импортe модуля
-init_films_table()
+@lab7.record_once
+def init(state):
+    with state.app.app_context():
+        init_films_table()
 
 
 def row_to_film(row):

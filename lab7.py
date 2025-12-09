@@ -2,6 +2,7 @@ from lab5 import db_connect, db_close
 
 from flask import Blueprint, render_template, request, abort, jsonify
 from datetime import datetime
+import sqlite3
 
 lab7 = Blueprint('lab7', __name__)
 
@@ -91,30 +92,56 @@ def init_films_table():
     """Создаём таблицу films и заполняем её начальными данными, если она пустая."""
     conn, cur = db_connect()
     try:
-        cur.execute('''
-            CREATE TABLE IF NOT EXISTS films (
-                id INTEGER PRIMARY KEY,
-                title TEXT NOT NULL,
-                title_ru TEXT NOT NULL,
-                year INTEGER NOT NULL,
-                description TEXT NOT NULL
-            )
-        ''')
-        # если таблица пустая – заполним начальными фильмами
-        cur.execute('SELECT COUNT(*) FROM films')
-        count = cur.fetchone()[0]
-        if count == 0:
-            for f in initial_films:
-                cur.execute(
-                    'INSERT INTO films (title, title_ru, year, description) '
-                    'VALUES (?, ?, ?, ?)',
-                    (f['title'], f['title_ru'], f['year'], f['description'])
+        use_sqlite = isinstance(conn, sqlite3.Connection)
+
+        if use_sqlite:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS films (
+                    id INTEGER PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    title_ru TEXT NOT NULL,
+                    year INTEGER NOT NULL,
+                    description TEXT NOT NULL
                 )
+            ''')
+        else:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS films (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    title_ru TEXT NOT NULL,
+                    year INTEGER NOT NULL,
+                    description TEXT NOT NULL
+                )
+            ''')
+
+        # Проверяем, есть ли данные в таблице
+        cur.execute('SELECT COUNT(*) AS cnt FROM films')
+        row = cur.fetchone()
+        count = row['cnt']
+
+        if count == 0:
+            # заполним начальными фильмами
+            for f in initial_films:
+                if use_sqlite:
+                    cur.execute(
+                        'INSERT INTO films (title, title_ru, year, description) '
+                        'VALUES (?, ?, ?, ?)',
+                        (f['title'], f['title_ru'], f['year'], f['description'])
+                    )
+                else:
+                    cur.execute(
+                        'INSERT INTO films (title, title_ru, year, description) '
+                        'VALUES (%s, %s, %s, %s)',
+                        (f['title'], f['title_ru'], f['year'], f['description'])
+                    )
+
         conn.commit()
     finally:
         db_close(conn, cur)
 
 
+# Flask один раз, при подключении blueprint'а, вызовет init_films_table()
 @lab7.record_once
 def init(state):
     with state.app.app_context():
@@ -123,13 +150,23 @@ def init(state):
 
 def row_to_film(row):
     """Преобразование строки БД в словарь фильма."""
-    return {
-        'id': row[0],
-        'title': row[1],
-        'title_ru': row[2],
-        'year': row[3],
-        'description': row[4],
-    }
+    # и для RealDictRow/dict, и для sqlite3.Row, и для обычного кортежа
+    if isinstance(row, dict) or hasattr(row, 'keys'):
+        return {
+            'id': row['id'],
+            'title': row['title'],
+            'title_ru': row['title_ru'],
+            'year': row['year'],
+            'description': row['description'],
+        }
+    else:
+        return {
+            'id': row[0],
+            'title': row[1],
+            'title_ru': row[2],
+            'year': row[3],
+            'description': row[4],
+        }
 
 
 @lab7.route('/lab7/rest-api/films/', methods=['GET'])
@@ -146,9 +183,11 @@ def get_films():
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['GET'])
 def get_film(id):
     conn, cur = db_connect()
+    use_sqlite = isinstance(conn, sqlite3.Connection)
+    ph = '?' if use_sqlite else '%s'
     try:
         cur.execute(
-            'SELECT id, title, title_ru, year, description FROM films WHERE id = ?',
+            f'SELECT id, title, title_ru, year, description FROM films WHERE id = {ph}',
             (id,)
         )
         row = cur.fetchone()
@@ -164,8 +203,10 @@ def get_film(id):
 @lab7.route('/lab7/rest-api/films/<int:id>', methods=['DELETE'])
 def del_film(id):
     conn, cur = db_connect()
+    use_sqlite = isinstance(conn, sqlite3.Connection)
+    ph = '?' if use_sqlite else '%s'
     try:
-        cur.execute('DELETE FROM films WHERE id = ?', (id,))
+        cur.execute(f'DELETE FROM films WHERE id = {ph}', (id,))
         deleted = cur.rowcount
         conn.commit()
     finally:
@@ -203,10 +244,12 @@ def put_film(id):
         return {'description': 'Описание не должно превышать 2000 символов'}, 400
 
     conn, cur = db_connect()
+    use_sqlite = isinstance(conn, sqlite3.Connection)
+    ph = '?' if use_sqlite else '%s'
     try:
         cur.execute(
-            'UPDATE films SET title = ?, title_ru = ?, year = ?, description = ? '
-            'WHERE id = ?',
+            f'UPDATE films SET title = {ph}, title_ru = {ph}, year = {ph}, description = {ph} '
+            f'WHERE id = {ph}',
             (film['title'], film['title_ru'], year, description, id)
         )
         updated = cur.rowcount
@@ -249,13 +292,26 @@ def add_film():
         return {'description': 'Описание не должно превышать 2000 символов'}, 400
 
     conn, cur = db_connect()
+    use_sqlite = isinstance(conn, sqlite3.Connection)
     try:
-        cur.execute(
-            'INSERT INTO films (title, title_ru, year, description) '
-            'VALUES (?, ?, ?, ?)',
-            (film['title'], film['title_ru'], year, description)
-        )
-        new_id = cur.lastrowid
+        if use_sqlite:
+            # SQLite
+            cur.execute(
+                'INSERT INTO films (title, title_ru, year, description) '
+                'VALUES (?, ?, ?, ?)',
+                (film['title'], film['title_ru'], year, description)
+            )
+            new_id = cur.lastrowid
+        else:
+            # Postgres – используем RETURNING id
+            cur.execute(
+                'INSERT INTO films (title, title_ru, year, description) '
+                'VALUES (%s, %s, %s, %s) RETURNING id',
+                (film['title'], film['title_ru'], year, description)
+            )
+            row = cur.fetchone()
+            new_id = row['id']
+
         conn.commit()
     finally:
         db_close(conn, cur)

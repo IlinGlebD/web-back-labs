@@ -40,8 +40,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY',
 app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'postgres')
 
 if app.config['DB_TYPE'] == 'postgres':
-    db_name = 'gleb_ilin_orm'
-    db_user = 'gleb_ilin_orm'
+    db_name = 'gleb_orm'
+    db_user = 'gleb_orm'
     db_password = '123'
     host_ip = '127.0.0.1'
     host_port = 5432

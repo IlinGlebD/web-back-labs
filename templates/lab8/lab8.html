@@ -2,34 +2,37 @@
 
 {% block lab %}Лабораторная работа 8{% endblock %}
 
+{% block main %}
 <style>
 body { font-family: Arial; margin: 20px; }
 h1 { color: #333; }
 p { margin-bottom: 20px; }
-.btn { 
-    background: blue; 
-    color: white; 
-    padding: 10px 15px; 
-    text-decoration: none; 
-    border-radius: 5px; 
-    margin-right: 10px; 
+.btn {
+    background: blue;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-right: 10px;
 }
 </style>
 
-{% block main %}
-    <h1>База знаний</h1>
-    {% if current_user.is_authenticated %}
-        <p>Добро пожаловать, {{ current_user.login }}!</p>
-        <div>
-            <a href="/lab8/articles" class="btn">Мои статьи</a>
-            <a href="/lab8/create" class="btn">Создать статью</a>
-            <a href="/lab8/logout" class="btn">Выйти</a>
-        </div>
-    {% else %}
-        <p>Добро пожаловать, Anonymous!</p>
-        <div>
-            <a href="/lab8/login" class="btn">Вход</a>
-            <a href="/lab8/register" class="btn">Регистрация</a>
-        </div>
-    {% endif %}
+<h1>База знаний</h1>
+
+{% if current_user.is_authenticated %}
+    <p>Добро пожаловать, {{ current_user.login }}!</p>
+    <div>
+        <a href="/lab8/articles" class="btn">Статьи</a>
+        <a href="/lab8/create" class="btn">Создать статью</a>
+        <a href="/lab8/logout" class="btn">Выйти</a>
+    </div>
+{% else %}
+    <p>Добро пожаловать, Anonymous!</p>
+    <div>
+        <a href="/lab8/articles" class="btn">Публичные статьи</a>
+        <a href="/lab8/login" class="btn">Вход</a>
+        <a href="/lab8/register" class="btn">Регистрация</a>
+    </div>
+{% endif %}
+
 {% endblock %}

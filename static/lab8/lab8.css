@@ -1,0 +1,142 @@
+/* ========== Base ========== */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    color: #333;
+  }
+  
+  h1 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  /* ========== Buttons ========== */
+  .btn {
+    background: #1f6feb;
+    color: #fff;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-right: 10px;
+    display: inline-block;
+  }
+  
+  .btn:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-green { background: #28a745; }
+  .btn-orange { background: orange; }
+  .btn-red { background: #d9534f; }
+  
+  /* ========== Forms ========== */
+  .form {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .form-small {
+    max-width: 400px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 6px;
+  }
+  
+  input[type="text"],
+  input[type="password"],
+  textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  
+  textarea {
+    min-height: 200px;
+    resize: vertical;
+  }
+  
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+  }
+  
+  .checkbox input {
+    width: auto;
+  }
+  
+  button {
+    background: #1f6feb;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    opacity: 0.9;
+  }
+  
+  /* ========== Messages ========== */
+  .error {
+    color: #c62828;
+    background: #ffebee;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+  }
+  
+  /* ========== Articles ========== */
+  .article {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+  }
+  
+  .article h3 {
+    margin-top: 0;
+  }
+  
+  .actions a {
+    margin-right: 10px;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    color: #fff;
+  }
+  
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    margin-left: 8px;
+  }
+  
+  /* ========== Search ========== */
+  .search-box {
+    margin: 10px 0 20px;
+  }
+  
+  .search-box input {
+    padding: 6px 10px;
+    width: 250px;
+  }
+  
+  .search-box button {
+    padding: 6px 10px;
+  }
+  

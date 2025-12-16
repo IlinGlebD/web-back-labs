@@ -51,7 +51,16 @@ def login():
     login_form = request.form.get('login')
     password_form = request.form.get('password')
 
-    user = users.query_by(login=login_form).first()
+    # Проверка, что логин и пароль не пустые
+    if not login_form or login_form.strip() == '':
+        return render_template('/lab8/login.html',
+                               error='Логин не может быть пустым')
+
+    if not password_form or password_form.strip() == '':
+        return render_template('/lab8/login.html',
+                               error='Пароль не может быть пустым')
+
+    user = users.query.filter_by(login=login_form).first()
 
     if user:
         if check_password_hash(user.password, password_form):

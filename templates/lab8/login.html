@@ -5,6 +5,12 @@
 {% block main %}
     <h1>Вход в систему</h1>
 
+    {% if error %}
+        <div style="color: red; margin-bottom: 15px;">
+            {{ error }}
+        </div>
+    {% endif %}
+
     <form action="/lab8/login" method="post">
         <div>
             <label>

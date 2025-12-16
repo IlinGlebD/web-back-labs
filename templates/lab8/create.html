@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block lab %}{% if article %}Редактирование{% else %}Создание{% endif %} статьи{% endblock %}
+
+<style>
+body { font-family: Arial; margin: 20px; }
+form { max-width: 600px; margin: 0 auto; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; }
+input[type="text"], textarea { 
+    width: 100%; 
+    padding: 8px; 
+    border: 1px solid #ccc; 
+}
+textarea { height: 200px; }
+button { 
+    background: blue; 
+    color: white; 
+    padding: 10px 15px; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer; 
+}
+.error { color: red; margin-bottom: 15px; }
+.checkbox { display: flex; align-items: center; }
+.checkbox input { width: auto; margin-right: 10px; }
+</style>
+
+{% block main %}
+    <h1>{% if article %}Редактирование{% else %}Создание{% endif %} статьи</h1>
+    
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post">
+        <div class="form-group">
+            <label>Заголовок:</label>
+            <input type="text" name="title" 
+                   value="{{ article.title if article else '' }}" 
+                   required>
+        </div>
+        
+        <div class="form-group">
+            <label>Текст статьи:</label>
+            <textarea name="article_text" required>{{ article.article_text if article else '' }}</textarea>
+        </div>
+        
+        <div class="checkbox">
+            <input type="checkbox" name="is_public" id="is_public"
+                   {% if article and article.is_public %}checked{% endif %}>
+            <label for="is_public">Публичная статья</label>
+        </div>
+        
+        <button type="submit">
+            {% if article %}Сохранить{% else %}Создать{% endif %}
+        </button>
+    </form>
+{% endblock %}

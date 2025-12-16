@@ -1,29 +1,48 @@
 {% extends "base.html" %}
 
-{% block lab %}Лабораторная работа 8{% endblock %}
+{% block lab %}Вход{% endblock %}
+
+<style>
+body { font-family: Arial; margin: 20px; }
+form { max-width: 400px; margin: 0 auto; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; }
+input[type="text"], input[type="password"] { 
+    width: 100%; 
+    padding: 8px; 
+    border: 1px solid #ccc; 
+}
+button { 
+    background: blue; 
+    color: white; 
+    padding: 10px 15px; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer; 
+}
+.error { color: red; margin-bottom: 15px; }
+.checkbox { display: flex; align-items: center; }
+.checkbox input { width: auto; margin-right: 10px; }
+</style>
 
 {% block main %}
     <h1>Вход в систему</h1>
 
     {% if error %}
-        <div style="color: red; margin-bottom: 15px;">
-            {{ error }}
-        </div>
+        <div class="error">{{ error }}</div>
     {% endif %}
 
     <form action="/lab8/login" method="post">
-        <div>
-            <label>
-                Логин: <input type="text" name="login">
-            </label>
+        <div class="form-group">
+            <label>Логин: <input type="text" name="login"></label>
         </div>
-
-        <div>
-            <label>
-                Пароль: <input type="password" name="password">
-            </label>
+        <div class="form-group">
+            <label>Пароль: <input type="password" name="password"></label>
         </div>
-
+        <div class="checkbox">
+            <input type="checkbox" name="remember" id="remember">
+            <label for="remember">Запомнить меня</label>
+        </div>
         <button type="submit">Вход</button>
     </form>
 {% endblock %}

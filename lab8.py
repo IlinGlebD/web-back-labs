@@ -3,7 +3,7 @@ from db import db
 from db.models import users, articles
 from flask_login import login_user, login_required, current_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
-
+from datetime import datetime
 
 lab8 = Blueprint('lab8', __name__)
 
@@ -40,6 +40,9 @@ def register():
     new_user = users(login=login_form, password=password_hash)
     db.session.add(new_user)
     db.session.commit()
+    
+    # 2. Автоматический логин после регистрации
+    login_user(new_user, remember=False)
     return redirect('/lab8/')
 
 
@@ -50,6 +53,7 @@ def login():
 
     login_form = request.form.get('login')
     password_form = request.form.get('password')
+    remember = request.form.get('remember')  # 3. Галочка "запомнить меня"
 
     # Проверка, что логин и пароль не пустые
     if not login_form or login_form.strip() == '':
@@ -64,7 +68,8 @@ def login():
 
     if user:
         if check_password_hash(user.password, password_form):
-            login_user(user, remember=False)
+            # 3. Используем remember для длительной сессии
+            login_user(user, remember=(remember == 'on'))
             return redirect('/lab8/')
 
     return render_template('/lab8/login.html',
@@ -72,9 +77,101 @@ def login():
 
 
 @lab8.route('/lab8/articles')
-@login_required
 def article_list():
-    return "список статей"
+    # Получаем все публичные статьи
+    public_articles = articles.query.filter_by(is_public=True).all()
+
+    # Если пользователь авторизован, добавляем его личные статьи
+    if current_user.is_authenticated:
+        # Получаем статьи текущего пользователя
+        user_articles = articles.query.filter_by(
+            user_id=current_user.id,
+            is_public=False  # его приватные статьи
+        ).all()
+
+        # Объединяем публичные и личные статьи
+        all_articles = public_articles + user_articles
+    else:
+        # Для неавторизованных только публичные статьи
+        all_articles = public_articles
+
+    return render_template('lab8/articles.html', articles=all_articles)
+
+
+@lab8.route('/lab8/create', methods=['GET', 'POST'])
+@login_required
+def create_article():
+    # 4. Создание статьи
+    if request.method == 'GET':
+        return render_template('lab8/create.html')
+
+    title = request.form.get('title')
+    article_text = request.form.get('article_text')
+    is_public = request.form.get('is_public') == 'on'
+
+    if not title or not article_text:
+        return render_template('lab8/create.html', 
+                               error='Заполните все поля')
+
+    new_article = articles(
+        title=title,
+        article_text=article_text,
+        is_public=is_public,
+        user_id=current_user.id
+    )
+
+    db.session.add(new_article)
+    db.session.commit()
+
+    return redirect('/lab8/articles')
+
+
+@lab8.route('/lab8/edit/<int:article_id>', methods=['GET', 'POST'])
+@login_required
+def edit_article(article_id):
+    # 5. Редактирование статьи
+    article = articles.query.get_or_404(article_id)
+
+    # Проверяем, что статья принадлежит текущему пользователю
+    if article.user_id != current_user.id:
+        return "Ошибка: нет доступа к этой статье", 403
+
+    if request.method == 'GET':
+        return render_template('lab8/edit.html', article=article)
+
+    title = request.form.get('title')
+    article_text = request.form.get('article_text')
+    is_public = request.form.get('is_public') == 'on'
+
+    if not title or not article_text:
+        return render_template('lab8/edit.html', 
+                               article=article,
+                               error='Заполните все поля')
+
+    article.title = title
+    article.article_text = article_text
+    article.is_public = is_public
+    article.updated_at = datetime.utcnow()
+
+    db.session.commit()
+
+    return redirect('/lab8/articles')
+
+
+@lab8.route('/lab8/delete/<int:article_id>')
+@login_required
+def delete_article(article_id):
+    # 6. Удаление статьи
+    article = articles.query.get_or_404(article_id)
+
+    # Проверяем, что статья принадлежит текущему пользователю
+    if article.user_id != current_user.id:
+        return "Ошибка: нет доступа к этой статье", 403
+
+    db.session.delete(article)
+    db.session.commit()
+
+    return redirect('/lab8/articles')
 
 
 @lab8.route('/lab8/logout')

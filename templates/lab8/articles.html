@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block lab %}Мои статьи{% endblock %}
+
+<style>
+body { font-family: Arial; margin: 20px; }
+.article { 
+    border: 1px solid #ccc; 
+    padding: 15px; 
+    margin-bottom: 15px; 
+    border-radius: 5px; 
+}
+.article h3 { margin-top: 0; }
+.actions a { 
+    margin-right: 10px; 
+    text-decoration: none; 
+    padding: 5px 10px; 
+    border-radius: 3px; 
+}
+.edit { background: orange; color: white; }
+.delete { background: red; color: white; }
+.create-btn { 
+    background: green; 
+    color: white; 
+    padding: 10px 15px; 
+    text-decoration: none; 
+    border-radius: 5px; 
+    display: inline-block; 
+    margin-bottom: 20px; 
+}
+</style>
+
+{% block main %}
+    <h1>Мои статьи</h1>
+    <a href="/lab8/create" class="create-btn">Создать новую статью</a>
+    
+    {% if articles %}
+        {% for article in articles %}
+            <div class="article">
+                <h3>{{ article.title }}</h3>
+                <p>{{ article.article_text[:100] }}...</p>
+                <small>Создано: {{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                <div class="actions">
+                    <a href="/lab8/edit/{{ article.id }}" class="edit">Редактировать</a>
+                    <a href="/lab8/delete/{{ article.id }}" class="delete" 
+                       onclick="return confirm('Удалить статью?')">Удалить</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>У вас пока нет статей.</p>
+    {% endif %}
+{% endblock %}

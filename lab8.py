@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect
 from db import db
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func
 from db.models import users, articles
 from flask_login import login_user, login_required, current_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -79,42 +79,33 @@ def login():
 
 @lab8.route('/lab8/articles')
 def article_list():
-    # Получаем поисковый запрос
-    q = request.args.get('q', '').strip()
+    q = (request.args.get('q') or '').strip()
 
-    # Начинаем запрос
-    query = articles.query
+    # 1) Условие "доступа"
+    access_condition = articles.is_public.is_(True)
 
-    # Проверяем, авторизован ли пользователь
     if current_user.is_authenticated:
-        # Пользователь видит публичные статьи ИЛИ свои приватные
-        query = query.filter(
-            or_(
-                articles.is_public == True,
-                and_(
-                    articles.is_public == False,
-                    articles.user_id == current_user.id
-                )
+        access_condition = or_(
+            articles.is_public.is_(True),
+            and_(
+                articles.is_public.is_(False),
+                articles.user_id == current_user.id
             )
         )
-    else:
-        # Неавторизованный видит только публичные
-        query = query.filter(articles.is_public == True)
 
-    # Если есть поисковый запрос
+    query = articles.query.filter(access_condition)
+
+    # 2) Поиск (регистронезависимый) - работает и в Postgres, и в SQLite
     if q:
-        # ilike для регистронезависимого поиска
-        search_pattern = f'%{q}%'
+        pattern = f"%{q.lower()}%"
         query = query.filter(
             or_(
-                articles.title.ilike(search_pattern),
-                articles.article_text.ilike(search_pattern)
+                func.lower(articles.title).like(pattern),
+                func.lower(articles.article_text).like(pattern)
             )
         )
 
-    # Сортируем по дате создания (новые сверху)
     all_articles = query.order_by(articles.created_at.desc()).all()
-
     return render_template('lab8/articles.html', articles=all_articles, q=q)
 
 

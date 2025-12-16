@@ -81,21 +81,18 @@ def login():
 def article_list():
     q = (request.args.get('q') or '').strip()
 
-    # 1) Условие "доступа"
-    access_condition = articles.is_public.is_(True)
-
+    # Доступ: всем публичные, авторизованному ещё и свои приватные
+    access = articles.is_public.is_(True)
     if current_user.is_authenticated:
-        access_condition = or_(
+        access = or_(
             articles.is_public.is_(True),
-            and_(
-                articles.is_public.is_(False),
-                articles.user_id == current_user.id
-            )
+            and_(articles.is_public.is_(False),
+                 articles.user_id == current_user.id)
         )
 
-    query = articles.query.filter(access_condition)
+    query = articles.query.filter(access)
 
-    # 2) Поиск (регистронезависимый) - работает и в Postgres, и в SQLite
+    # Регистронезависимый поиск по подстроке
     if q:
         pattern = f"%{q.lower()}%"
         query = query.filter(

@@ -5,6 +5,12 @@
 {% block main %}
     <h1>Регистрация</h1>
 
+    {% if error %}
+        <div style="color: red; margin-bottom: 15px;">
+            {{ error }}
+        </div>
+    {% endif %}
+
     <form action="/lab8/register" method="post">
         <div>
             <label>

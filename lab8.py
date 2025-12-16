@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect
 from db import db
+from sqlalchemy import or_, and_
 from db.models import users, articles
 from flask_login import login_user, login_required, current_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -40,7 +41,7 @@ def register():
     new_user = users(login=login_form, password=password_hash)
     db.session.add(new_user)
     db.session.commit()
-    
+
     # 2. Автоматический логин после регистрации
     login_user(new_user, remember=False)
     return redirect('/lab8/')
@@ -78,24 +79,40 @@ def login():
 
 @lab8.route('/lab8/articles')
 def article_list():
-    # Получаем все публичные статьи
-    public_articles = articles.query.filter_by(is_public=True).all()
+    # строка поиска из GET-параметра ?q=...
+    q = (request.args.get('q') or '').strip()
 
-    # Если пользователь авторизован, добавляем его личные статьи
+    # БАЗА: всем доступны публичные статьи
+    base_filter = [articles.is_public.is_(True)]
+
+    # Если пользователь авторизован — добавляем его приватные статьи
     if current_user.is_authenticated:
-        # Получаем статьи текущего пользователя
-        user_articles = articles.query.filter_by(
-            user_id=current_user.id,
-            is_public=False  # его приватные статьи
-        ).all()
+        base_filter.append(
+            and_(
+                articles.is_public.is_(False),
+                articles.user_id == current_user.id
+            )
+        )
 
-        # Объединяем публичные и личные статьи
-        all_articles = public_articles + user_articles
-    else:
-        # Для неавторизованных только публичные статьи
-        all_articles = public_articles
+    # Общий фильтр доступа: public OR (my private)
+    access_condition = or_(*base_filter)
 
-    return render_template('lab8/articles.html', articles=all_articles)
+    query = articles.query.filter(access_condition)
+
+    # Поиск (регистронезависимый): по заголовку ИЛИ по тексту
+    if q:
+        pattern = f"%{q}%"
+        query = query.filter(
+            or_(
+                articles.title.ilike(pattern),
+                articles.article_text.ilike(pattern)
+            )
+        )
+
+    # Можно отсортировать по "самые новые сверху"
+    all_articles = query.order_by(articles.id.desc()).all()
+
+    return render_template('lab8/articles.html', articles=all_articles, q=q)
 
 
 @lab8.route('/lab8/create', methods=['GET', 'POST'])

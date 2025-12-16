@@ -37,7 +37,7 @@ app.register_blueprint(lab8)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY',
                                           'секретно-секретный ключ')
-app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'postgres')
+app.config['DB_TYPE'] = os.getenv('DB_TYPE', 'sqlite')
 
 if app.config['DB_TYPE'] == 'postgres':
     db_name = 'gleb_orm'

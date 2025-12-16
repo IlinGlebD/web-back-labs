@@ -79,31 +79,36 @@ def login():
 
 @lab8.route('/lab8/articles')
 def article_list():
-    q = (request.args.get('q') or '').strip()
+    q = (request.args.get('q') or '').strip().lower()
 
-    # Доступ: всем публичные, авторизованному ещё и свои приватные
-    access = articles.is_public.is_(True)
+    # 1. Получаем статьи по доступу
     if current_user.is_authenticated:
-        access = or_(
-            articles.is_public.is_(True),
-            and_(articles.is_public.is_(False),
-                 articles.user_id == current_user.id)
-        )
-
-    query = articles.query.filter(access)
-
-    # Регистронезависимый поиск по подстроке
-    if q:
-        pattern = f"%{q.lower()}%"
-        query = query.filter(
+        articles_list = articles.query.filter(
             or_(
-                func.lower(articles.title).like(pattern),
-                func.lower(articles.article_text).like(pattern)
+                articles.is_public.is_(True),
+                and_(
+                    articles.is_public.is_(False),
+                    articles.user_id == current_user.id
+                )
             )
-        )
+        ).order_by(articles.created_at.desc()).all()
+    else:
+        articles_list = articles.query.filter(
+            articles.is_public.is_(True)
+        ).order_by(articles.created_at.desc()).all()
 
-    all_articles = query.order_by(articles.created_at.desc()).all()
-    return render_template('lab8/articles.html', articles=all_articles, q=q)
+    # 2. Поиск по Python (регистронезависимый, кириллица работает)
+    if q:
+        articles_list = [
+            a for a in articles_list
+            if q in a.title.lower() or q in a.article_text.lower()
+        ]
+
+    return render_template(
+        'lab8/articles.html',
+        articles=articles_list,
+        q=q
+    )
 
 
 @lab8.route('/lab8/create', methods=['GET', 'POST'])

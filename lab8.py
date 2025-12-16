@@ -79,38 +79,41 @@ def login():
 
 @lab8.route('/lab8/articles')
 def article_list():
-    # строка поиска из GET-параметра ?q=...
-    q = (request.args.get('q') or '').strip()
+    # Получаем поисковый запрос
+    q = request.args.get('q', '').strip()
 
-    # БАЗА: всем доступны публичные статьи
-    base_filter = [articles.is_public.is_(True)]
+    # Начинаем запрос
+    query = articles.query
 
-    # Если пользователь авторизован — добавляем его приватные статьи
+    # Проверяем, авторизован ли пользователь
     if current_user.is_authenticated:
-        base_filter.append(
-            and_(
-                articles.is_public.is_(False),
-                articles.user_id == current_user.id
-            )
-        )
-
-    # Общий фильтр доступа: public OR (my private)
-    access_condition = or_(*base_filter)
-
-    query = articles.query.filter(access_condition)
-
-    # Поиск (регистронезависимый): по заголовку ИЛИ по тексту
-    if q:
-        pattern = f"%{q}%"
+        # Пользователь видит публичные статьи ИЛИ свои приватные
         query = query.filter(
             or_(
-                articles.title.ilike(pattern),
-                articles.article_text.ilike(pattern)
+                articles.is_public == True,
+                and_(
+                    articles.is_public == False,
+                    articles.user_id == current_user.id
+                )
+            )
+        )
+    else:
+        # Неавторизованный видит только публичные
+        query = query.filter(articles.is_public == True)
+
+    # Если есть поисковый запрос
+    if q:
+        # ilike для регистронезависимого поиска
+        search_pattern = f'%{q}%'
+        query = query.filter(
+            or_(
+                articles.title.ilike(search_pattern),
+                articles.article_text.ilike(search_pattern)
             )
         )
 
-    # Можно отсортировать по "самые новые сверху"
-    all_articles = query.order_by(articles.id.desc()).all()
+    # Сортируем по дате создания (новые сверху)
+    all_articles = query.order_by(articles.created_at.desc()).all()
 
     return render_template('lab8/articles.html', articles=all_articles, q=q)
 

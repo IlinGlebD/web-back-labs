@@ -1,11 +1,258 @@
 {% extends "base.html" %}
 
-{% block lab %}Лабораторная работа 8{% endblock %}
-
-{% block script %}{% endblock %}
+{% block lab %}Лабораторная работа 9{% endblock %}
 
 {% block main %}
 
-    <h1>Поздравления</h1>
+<style>
+    /* ===== ОБЩИЙ ФОН С ГРАДИЕНТОМ ===== */
+    body {
+      background: radial-gradient(circle at top, #0b2a5b, #06152d);
+    }
+    
+    /* ===== ЗАГОЛОВОК ===== */
+    h1 {
+      text-align: center;
+      font-size: 42px;
+      margin-bottom: 10px;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(255,255,255,.25);
+    }
+    
+    /* ===== СТАТИСТИКА ===== */
+    .stats {
+      text-align: center;
+      font-size: 18px;
+      color: #e6f2ff;
+      margin-bottom: 30px;
+    }
+    
+    /* ===== ПОЛЕ С ПОДАРКАМИ ===== */
+    .field {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 50px 90px;
+      justify-items: center;
+      align-items: center;
+      padding: 60px 80px;
+      min-height: 70vh;
+    
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.06), transparent 40%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,.05), transparent 45%);
+      border-radius: 20px;
+    }
+    
+    /* ===== КОРОБКИ ===== */
+    .box {
+      width: 150px;
+      cursor: pointer;
+      transition: transform .15s ease, filter .2s ease, opacity .2s ease;
+      filter: drop-shadow(0 12px 15px rgba(0,0,0,.35));
+    }
+    
+    .box:hover {
+      transform: scale(1.08) rotate(-2deg);
+    }
+    
+    .box.opened {
+      opacity: .35;
+      filter: grayscale(1) blur(.4px);
+      pointer-events: none;
+    }
+    
+    /* ===== МОДАЛЬНОЕ ОКНО ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    /* ===== КАРТОЧКА ПОЗДРАВЛЕНИЯ ===== */
+    .card {
+      background: linear-gradient(180deg, #ffffff, #f3f6ff);
+      border-radius: 18px;
+      padding: 22px;
+      width: min(520px, 100%);
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,.4);
+    }
+    
+    .card h3 {
+      margin-top: 0;
+      color: #c91d1d;
+      font-size: 26px;
+    }
+    
+    /* ===== ТЕКСТ ПОЗДРАВЛЕНИЯ ===== */
+    #modalText {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    
+    /* ===== ПОДАРОК В МОДАЛКЕ ===== */
+    .gift {
+      width: 280px;
+      max-width: 100%;
+      display: block;
+      margin: 10px auto 18px;
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,.3));
+    }
+    
+    /* ===== КНОПКА ===== */
+    .btn {
+      background: linear-gradient(180deg, #e53935, #b71c1c);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+    
+    .btn:hover {
+      background: linear-gradient(180deg, #ff5252, #c62828);
+    }
+    
+    /* ===== ПРОСТОЙ СНЕГ ===== */
+    .field::before,
+    .field::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.8), transparent),
+        radial-gradient(2px 2px at 140px 80px, rgba(255,255,255,.7), transparent),
+        radial-gradient(1.5px 1.5px at 260px 140px, rgba(255,255,255,.6), transparent),
+        radial-gradient(2px 2px at 380px 60px, rgba(255,255,255,.75), transparent);
+      background-size: 500px 200px;
+      animation: snow 14s linear infinite;
+      pointer-events: none;
+    }
+    
+    .field::after {
+      animation-duration: 22s;
+      opacity: .5;
+    }
+    
+    @keyframes snow {
+      from { transform: translateY(-120px); }
+      to   { transform: translateY(600px); }
+    }
+</style>
 
+<h1>Поздравления</h1>
+
+<div class="stats">
+  Неоткрытых коробок: <b id="remaining">{{ remaining }}</b> / {{ total_boxes }}<br/>
+  Вы открыли: <b id="openedCount">{{ opened_count }}</b> / 3
+</div>
+
+<div class="field" id="field">
+    {% for p in positions %}
+        <img
+            class="box"
+            src="{{ url_for('static', filename='img/' ~ p.img) }}"
+            data-id="{{ p.id }}"
+            alt="gift box"
+        >
+    {% endfor %}
+</div>
+
+<div class="modal" id="modal">
+  <div class="card">
+    <h3>Поздравление</h3>
+    <div id="modalText"></div>
+    <img class="gift" id="modalGift" alt="gift"/>
+    <button class="btn" id="closeModal">Закрыть</button>
+  </div>
+</div>
+
+<script>
+  window.__OPENED_GLOBAL__ = new Set({{ opened_global|tojson }});
+  window.STATIC_IMG_BASE = "{{ url_for('static', filename='img/') }}";  // например: /static/img/
+</script>
+{% endblock %}
+
+{% block script %}
+<script>
+async function postJSON(url, payload) {
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload || {})
+  });
+  return r.json();
+}
+
+function setBoxOpened(el) {
+  el.classList.add("opened");
+  el.style.pointerEvents = "none";
+}
+
+function applyOpenedGlobal() {
+  document.querySelectorAll(".box").forEach(el => {
+    const id = Number(el.dataset.id);
+    if (window.__OPENED_GLOBAL__.has(id)) setBoxOpened(el);
+  });
+}
+
+function showModal(text, giftFileName) {
+  document.getElementById("modalText").textContent = text;
+  document.getElementById("modalGift").src = window.STATIC_IMG_BASE + giftFileName;
+  document.getElementById("modal").classList.add("show");
+}
+
+function hideModal() {
+  document.getElementById("modal").classList.remove("show");
+}
+
+async function refreshStatus() {
+  const s = await postJSON("/lab9/api/status", {});
+  document.getElementById("remaining").textContent = s.remaining;
+  document.getElementById("openedCount").textContent = s.opened_count;
+  window.__OPENED_GLOBAL__ = new Set(s.opened_global);
+  applyOpenedGlobal();
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  applyOpenedGlobal();
+
+  document.getElementById("closeModal").addEventListener("click", hideModal);
+  document.getElementById("modal").addEventListener("click", (e) => {
+    if (e.target.id === "modal") hideModal();
+  });
+
+  document.querySelectorAll(".box").forEach(el => {
+    el.addEventListener("click", async () => {
+      const id = Number(el.dataset.id);
+      const res = await postJSON("/lab9/api/open", { box_id: id });
+
+      if (res.ok) {
+        setBoxOpened(el);
+        document.getElementById("remaining").textContent = res.remaining;
+        document.getElementById("openedCount").textContent = res.opened_count;
+        window.__OPENED_GLOBAL__.add(id);
+        showModal(res.greeting, res.gift_img);
+        return;
+      }
+
+      alert(res.message || "Не удалось открыть коробку.");
+      await refreshStatus();
+    });
+  });
+
+  await refreshStatus();
+});
+</script>
 {% endblock %}

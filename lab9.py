@@ -4,6 +4,10 @@ import random
 lab9 = Blueprint("lab9", __name__)
 
 TOTAL_BOXES = 10
+LIMIT_PER_USER = 3
+
+# Эти коробки можно открыть только авторизованным
+RESTRICTED_BOXES = {0, 1, 2}
 
 GREETINGS = [
     "С Новым годом! Пусть мечты сбываются!",
@@ -18,25 +22,24 @@ GREETINGS = [
     "Пусть всё задуманное реализуется!"
 ]
 
-# ВАЖНО: только имена файлов (без /static/...)
 BOX_IMAGES = ["box1.png", "box2.png", "box3.png", "box4.png", "box5.png"]
 
 # Глобально для всех пользователей/браузеров (в памяти процесса сервера)
 opened_boxes_global = set()
 
 
-def ensure_session_data():
-    # 1) Позиции + картинка коробки фиксируем в сессии (чтобы при F5 не менялись)
-    if "lab9_positions" not in session:
-        positions = []
-        for i in range(TOTAL_BOXES):
-            positions.append({
-                "id": i,
-                "img": random.choice(BOX_IMAGES),
-            })
-        session["lab9_positions"] = positions
+def is_authenticated() -> bool:
+    # Самый простой способ: если у вас уже есть авторизация в проекте —
+    # просто убедитесь, что при логине кладёте user_id в session.
+    return "user_id" in session
 
-    # 2) Уникальное поздравление + подарок (имя файла)
+
+def ensure_session_data():
+    # Коробки в сетке: храним только id и картинку (позиции делает CSS-grid)
+    if "lab9_positions" not in session:
+        session["lab9_positions"] = [{"id": i, "img": random.choice(BOX_IMAGES)} for i in range(TOTAL_BOXES)]
+
+    # Уникальные поздравления на каждую коробку (для данного пользователя)
     if "lab9_map" not in session:
         ids = list(range(TOTAL_BOXES))
         random.shuffle(ids)
@@ -45,25 +48,25 @@ def ensure_session_data():
         for idx, box_id in enumerate(ids):
             gift_map[str(box_id)] = {
                 "greeting": GREETINGS[idx],
-                "gift_img": random.choice(BOX_IMAGES),  # подарок = картинка
+                "gift_img": random.choice(BOX_IMAGES)
             }
         session["lab9_map"] = gift_map
 
-    # 3) Счётчик открытий (не более 3) — в сессии
     session.setdefault("lab9_opened_count", 0)
 
 
 @lab9.route("/lab9/")
 def main():
     ensure_session_data()
-    remaining = TOTAL_BOXES - len(opened_boxes_global)
     return render_template(
         "lab9/index.html",
         positions=session["lab9_positions"],
         opened_global=list(opened_boxes_global),
-        remaining=remaining,
+        remaining=TOTAL_BOXES - len(opened_boxes_global),
         opened_count=session["lab9_opened_count"],
-        total_boxes=TOTAL_BOXES
+        total_boxes=TOTAL_BOXES,
+        is_auth=is_authenticated(),
+        restricted_boxes=list(RESTRICTED_BOXES)
     )
 
 
@@ -74,7 +77,7 @@ def api_status():
         "remaining": TOTAL_BOXES - len(opened_boxes_global),
         "opened_global": list(opened_boxes_global),
         "opened_count": session.get("lab9_opened_count", 0),
-        "limit": 3,
+        "limit": LIMIT_PER_USER,
         "total": TOTAL_BOXES
     })
 
@@ -85,6 +88,7 @@ def api_open():
 
     data = request.get_json(force=True) or {}
     box_id = data.get("box_id")
+
     if box_id is None:
         return jsonify({"ok": False, "message": "Не передан box_id"}), 400
 
@@ -96,7 +100,15 @@ def api_open():
     if box_id < 0 or box_id >= TOTAL_BOXES:
         return jsonify({"ok": False, "message": "Коробка не найдена"}), 404
 
-    # Уже открыта глобально
+    # Закрытые коробки — только для авторизованных
+    if (box_id in RESTRICTED_BOXES) and (not is_authenticated()):
+        return jsonify({
+            "ok": False,
+            "auth_required": True,
+            "message": "Этот подарок доступен только авторизованным пользователям."
+        }), 200
+
+    # Уже открыта глобально (в любом браузере)
     if box_id in opened_boxes_global:
         return jsonify({
             "ok": False,
@@ -104,9 +116,9 @@ def api_open():
             "message": "Эта коробка уже пустая — подарок забрали."
         }), 200
 
-    # Лимит 3 на пользователя
+    # Лимит 3 на пользователя (в сессии)
     opened_count = session.get("lab9_opened_count", 0)
-    if opened_count >= 3:
+    if opened_count >= LIMIT_PER_USER:
         return jsonify({
             "ok": False,
             "limit_reached": True,
@@ -125,10 +137,28 @@ def api_open():
         "ok": True,
         "box_id": box_id,
         "greeting": payload["greeting"],
-        "gift_img": payload["gift_img"],  # имя файла, например box3.png
+        "gift_img": payload["gift_img"],
         "remaining": TOTAL_BOXES - len(opened_boxes_global),
         "opened_count": session["lab9_opened_count"],
-        "limit": 3
+        "limit": LIMIT_PER_USER
+    })
+
+
+@lab9.post("/lab9/api/refill")
+def api_refill():
+    # Кнопка "Дед Мороз" — только для авторизованных
+    if not is_authenticated():
+        return jsonify({"ok": False, "message": "Только для авторизованных пользователей."}), 403
+
+    opened_boxes_global.clear()          # все коробки снова полные (для всех)
+    session["lab9_opened_count"] = 0     # сброс лимита для текущего пользователя
+
+    return jsonify({
+        "ok": True,
+        "message": "Дед Мороз наполнил все коробки!",
+        "remaining": TOTAL_BOXES - len(opened_boxes_global),
+        "opened_count": session["lab9_opened_count"],
+        "limit": LIMIT_PER_USER
     })
 
 

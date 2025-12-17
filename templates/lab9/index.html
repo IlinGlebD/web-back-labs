@@ -3,152 +3,131 @@
 {% block lab %}Лабораторная работа 9{% endblock %}
 
 {% block main %}
-
 <style>
-    /* ===== ОБЩИЙ ФОН С ГРАДИЕНТОМ ===== */
-    body {
-      background: radial-gradient(circle at top, #0b2a5b, #06152d);
-    }
-    
-    /* ===== ЗАГОЛОВОК ===== */
-    h1 {
-      text-align: center;
-      font-size: 42px;
-      margin-bottom: 10px;
-      color: #fff;
-      text-shadow: 0 2px 10px rgba(255,255,255,.25);
-    }
-    
-    /* ===== СТАТИСТИКА ===== */
-    .stats {
-      text-align: center;
-      font-size: 18px;
-      color: #e6f2ff;
-      margin-bottom: 30px;
-    }
-    
-    /* ===== ПОЛЕ С ПОДАРКАМИ ===== */
-    .field {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 50px 90px;
-      justify-items: center;
-      align-items: center;
-      padding: 60px 80px;
-      min-height: 70vh;
-    
-      background:
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,.06), transparent 40%),
-        radial-gradient(circle at 80% 30%, rgba(255,255,255,.05), transparent 45%);
-      border-radius: 20px;
-    }
-    
-    /* ===== КОРОБКИ ===== */
-    .box {
-      width: 150px;
-      cursor: pointer;
-      transition: transform .15s ease, filter .2s ease, opacity .2s ease;
-      filter: drop-shadow(0 12px 15px rgba(0,0,0,.35));
-    }
-    
-    .box:hover {
-      transform: scale(1.08) rotate(-2deg);
-    }
-    
-    .box.opened {
-      opacity: .35;
-      filter: grayscale(1) blur(.4px);
-      pointer-events: none;
-    }
-    
-    /* ===== МОДАЛЬНОЕ ОКНО ===== */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.6);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .modal.show {
-      display: flex;
-    }
-    
-    /* ===== КАРТОЧКА ПОЗДРАВЛЕНИЯ ===== */
-    .card {
-      background: linear-gradient(180deg, #ffffff, #f3f6ff);
-      border-radius: 18px;
-      padding: 22px;
-      width: min(520px, 100%);
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,.4);
-    }
-    
-    .card h3 {
-      margin-top: 0;
-      color: #c91d1d;
-      font-size: 26px;
-    }
-    
-    /* ===== ТЕКСТ ПОЗДРАВЛЕНИЯ ===== */
-    #modalText {
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
-    
-    /* ===== ПОДАРОК В МОДАЛКЕ ===== */
-    .gift {
-      width: 280px;
-      max-width: 100%;
-      display: block;
-      margin: 10px auto 18px;
-      filter: drop-shadow(0 8px 10px rgba(0,0,0,.3));
-    }
-    
-    /* ===== КНОПКА ===== */
-    .btn {
-      background: linear-gradient(180deg, #e53935, #b71c1c);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-    }
-    
-    .btn:hover {
-      background: linear-gradient(180deg, #ff5252, #c62828);
-    }
-    
-    /* ===== ПРОСТОЙ СНЕГ ===== */
-    .field::before,
-    .field::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.8), transparent),
-        radial-gradient(2px 2px at 140px 80px, rgba(255,255,255,.7), transparent),
-        radial-gradient(1.5px 1.5px at 260px 140px, rgba(255,255,255,.6), transparent),
-        radial-gradient(2px 2px at 380px 60px, rgba(255,255,255,.75), transparent);
-      background-size: 500px 200px;
-      animation: snow 14s linear infinite;
-      pointer-events: none;
-    }
-    
-    .field::after {
-      animation-duration: 22s;
-      opacity: .5;
-    }
-    
-    @keyframes snow {
-      from { transform: translateY(-120px); }
-      to   { transform: translateY(600px); }
-    }
+  body { background: radial-gradient(circle at top, #0b2a5b, #06152d); }
+
+  h1 {
+    text-align: center;
+    font-size: 42px;
+    margin-bottom: 10px;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,.25);
+  }
+
+  .stats {
+    text-align: center;
+    font-size: 18px;
+    color: #e6f2ff;
+    margin-bottom: 30px;
+  }
+
+  .field {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 50px 90px;
+    justify-items: center;
+    align-items: center;
+    padding: 60px 80px;
+    min-height: 70vh;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,.06), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(255,255,255,.05), transparent 45%);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .box {
+    width: 150px;
+    cursor: pointer;
+    transition: transform .15s ease, filter .2s ease, opacity .2s ease;
+    filter: drop-shadow(0 12px 15px rgba(0,0,0,.35));
+  }
+
+  .box:hover { transform: scale(1.08) rotate(-2deg); }
+
+  .box.opened { opacity: .35; filter: grayscale(1) blur(.4px); pointer-events: none; }
+
+  /* Закрытые коробки для гостей: золотая рамка */
+  .box.restricted {
+    outline: 2px solid rgba(255,215,0,.45);
+    border-radius: 12px;
+    padding: 6px;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 9999;
+  }
+
+  .modal.show { display: flex; }
+
+  .card {
+    background: linear-gradient(180deg, #ffffff, #f3f6ff);
+    border-radius: 18px;
+    padding: 22px;
+    width: min(520px, 100%);
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,.4);
+  }
+
+  .card h3 { margin-top: 0; color: #c91d1d; font-size: 26px; }
+
+  #modalText { font-size: 18px; margin-bottom: 15px; }
+
+  .gift {
+    width: 280px;
+    max-width: 100%;
+    display: block;
+    margin: 10px auto 18px;
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,.3));
+  }
+
+  .btn {
+    background: linear-gradient(180deg, #e53935, #b71c1c);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .btn:hover { background: linear-gradient(180deg, #ff5252, #c62828); }
+
+  /* Снег */
+  .field::before,
+  .field::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.8), transparent),
+      radial-gradient(2px 2px at 140px 80px, rgba(255,255,255,.7), transparent),
+      radial-gradient(1.5px 1.5px at 260px 140px, rgba(255,255,255,.6), transparent),
+      radial-gradient(2px 2px at 380px 60px, rgba(255,255,255,.75), transparent);
+    background-size: 500px 200px;
+    animation: snow 14s linear infinite;
+    pointer-events: none;
+  }
+
+  .field::after { animation-duration: 22s; opacity: .5; }
+
+  @keyframes snow {
+    from { transform: translateY(-120px); }
+    to   { transform: translateY(600px); }
+  }
+
+  .santa-wrap { margin-top: 12px; display: flex; justify-content: center; }
+  .santa-btn { max-width: 260px; }
 </style>
 
 <h1>Поздравления</h1>
@@ -156,17 +135,24 @@
 <div class="stats">
   Неоткрытых коробок: <b id="remaining">{{ remaining }}</b> / {{ total_boxes }}<br/>
   Вы открыли: <b id="openedCount">{{ opened_count }}</b> / 3
+
+  {% if is_auth %}
+    <div class="santa-wrap">
+      <button class="btn santa-btn" id="btnRefill">Дед Мороз</button>
+    </div>
+  {% endif %}
 </div>
 
 <div class="field" id="field">
-    {% for p in positions %}
-        <img
-            class="box"
-            src="{{ url_for('static', filename='img/' ~ p.img) }}"
-            data-id="{{ p.id }}"
-            alt="gift box"
-        >
-    {% endfor %}
+  {% for p in positions %}
+    <img
+      class="box {% if (not is_auth) and (p.id in restricted_boxes) %}restricted{% endif %}"
+      src="{{ url_for('static', filename='img/' ~ p.img) }}"
+      data-id="{{ p.id }}"
+      data-restricted="{{ 1 if p.id in restricted_boxes else 0 }}"
+      alt="gift box"
+    >
+  {% endfor %}
 </div>
 
 <div class="modal" id="modal">
@@ -180,7 +166,7 @@
 
 <script>
   window.__OPENED_GLOBAL__ = new Set({{ opened_global|tojson }});
-  window.STATIC_IMG_BASE = "{{ url_for('static', filename='img/') }}";  // например: /static/img/
+  window.STATIC_IMG_BASE = "{{ url_for('static', filename='img/') }}";  // /static/img/
 </script>
 {% endblock %}
 
@@ -251,6 +237,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       await refreshStatus();
     });
   });
+
+  const refillBtn = document.getElementById("btnRefill");
+  if (refillBtn) {
+    refillBtn.addEventListener("click", async () => {
+      const res = await postJSON("/lab9/api/refill", {});
+      if (!res.ok) {
+        alert(res.message || "Не удалось наполнить коробки.");
+        return;
+      }
+
+      // сбросить визуально
+      document.querySelectorAll(".box").forEach(el => {
+        el.classList.remove("opened");
+        el.style.pointerEvents = "auto";
+      });
+
+      window.__OPENED_GLOBAL__ = new Set();
+      document.getElementById("remaining").textContent = res.remaining;
+      document.getElementById("openedCount").textContent = res.opened_count;
+
+      alert(res.message);
+    });
+  }
 
   await refreshStatus();
 });
